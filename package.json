@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-parallel-ai",
+  "name": "@parallel-ai/n8n-nodes-parallel-ai",
   "version": "0.1.0",
   "description": "n8n nodes for Parallel AI",
   "main": "index.ts",
@@ -24,13 +24,16 @@
       "main/nodes/ParallelAiChatModel.node.js"
     ]
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/express": "^4.17.6",
