@@ -1,0 +1,47 @@
+{
+  "name": "n8n-nodes-parallel-ai",
+  "version": "0.1.0",
+  "description": "n8n nodes for Parallel AI",
+  "main": "index.ts",
+  "types": "dist/index.d.ts",
+  "keywords": [
+    "n8n-nodes",
+    "n8n-custom-nodes",
+    "parallel-ai",
+    "n8n-community-node-package"
+  ],
+  "files": [
+    "dist",
+    "logo.png"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "main/credentials/ParallelAiApi.credentials.js"
+    ],
+    "nodes": [
+      "main/nodes/ParallelAi.node.js",
+      "main/nodes/ParallelAiChatModel.node.js"
+    ]
+  },
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.6",
+    "@types/request-promise-native": "~1.0.15",
+    "@typescript-eslint/parser": "~5.45",
+    "eslint-plugin-n8n-nodes-base": "^1.11.0",
+    "gulp": "^4.0.2",
+    "n8n-core": "*",
+    "n8n-workflow": "*",
+    "prettier": "^2.7.1",
+    "typescript": "~4.8.4"
+  },
+  "license": "MIT"
+}
