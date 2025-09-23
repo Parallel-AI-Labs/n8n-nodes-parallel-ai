@@ -1,0 +1,11 @@
+import { IExecuteFunctions, ILoadOptionsFunctions, INodeExecutionData, INodePropertyOptions, INodeType, INodeTypeDescription } from "n8n-workflow";
+export declare class ParallelAi implements INodeType {
+    description: INodeTypeDescription;
+    methods: {
+        loadOptions: {
+            getEmployees(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
+            getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
+        };
+    };
+    execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]>;
+}

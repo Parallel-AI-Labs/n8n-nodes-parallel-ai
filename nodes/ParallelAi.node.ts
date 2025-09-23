@@ -23,7 +23,9 @@ export class ParallelAi implements INodeType {
       name: "Parallel AI",
     },
     inputs: [NodeConnectionType.Main],
-    outputs: [NodeConnectionType.Main],
+    outputs: [NodeConnectionType.Main, NodeConnectionType.AiTool],
+    outputNames: ["Standard Output", "AI Tool Output"],
+    usableAsTool: true,
     credentials: [
       {
         name: "parallelAiApi",
@@ -2475,6 +2477,36 @@ export class ParallelAi implements INodeType {
       });
     }
 
-    return [this.helpers.returnJsonArray(Array.isArray(responseData) ? responseData : [responseData])];
+    // Prepare standard output
+    const standardOutput = Array.isArray(responseData) ? responseData : [responseData];
+
+    // Prepare AI tool output for employee chat operations
+    let aiToolOutput = standardOutput;
+    
+    if (resource === "employee" && operation === "chat" && responseData?.response) {
+      // Format for AI Tool output - provide the actual response content
+      aiToolOutput = [{
+        output: responseData.response,
+        metadata: {
+          employeeId: this.getNodeParameter("employeeId", 0),
+          operation: "chat",
+          model: this.getNodeParameter("model", 0),
+        }
+      }];
+    } else if (resource === "document" && operation === "search" && responseData?.results) {
+      // Format document search results for AI Tool output (similar to KnowledgeBaseRetriever)
+      aiToolOutput = [{
+        output: responseData.results,
+        metadata: {
+          operation: "document_search",
+          query: this.getNodeParameter("query", 0),
+        }
+      }];
+    }
+
+    return [
+      this.helpers.returnJsonArray(standardOutput),
+      this.helpers.returnJsonArray(aiToolOutput),
+    ];
   }
 }

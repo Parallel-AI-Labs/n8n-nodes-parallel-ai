@@ -1,6 +1,6 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "n8n nodes for Parallel AI",
   "main": "index.ts",
   "types": "dist/index.d.ts",
@@ -21,7 +21,12 @@
     ],
     "nodes": [
       "main/nodes/ParallelAi.node.js",
-      "main/nodes/ParallelAiChatModel.node.js"
+      "main/nodes/ParallelAiChatModel.node.js",
+      "main/nodes/KnowledgeBaseRetriever.node.js",
+      "main/nodes/CalendarAvailability.node.js",
+      "main/nodes/CalendarBooking.node.js",
+      "main/nodes/CalendarAvailabilityTool.node.js",
+      "main/nodes/CalendarBookingTool.node.js"
     ]
   },
   "publishConfig": {
