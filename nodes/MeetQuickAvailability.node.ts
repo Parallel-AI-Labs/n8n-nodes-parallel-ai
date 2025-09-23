@@ -8,7 +8,7 @@ import {
   NodeOperationError,
 } from "n8n-workflow";
 
-export class CalendarAvailability implements INodeType {
+export class MeetQuickAvailability implements INodeType {
   description: INodeTypeDescription = {
     displayName: "MeetQuick Availability",
     name: "meetQuickAvailability",

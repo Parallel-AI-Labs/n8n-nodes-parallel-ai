@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CalendarAvailability = void 0;
+exports.MeetQuickAvailability = void 0;
 const n8n_workflow_1 = require("n8n-workflow");
-class CalendarAvailability {
+class MeetQuickAvailability {
     constructor() {
         this.description = {
             displayName: "MeetQuick Availability",
@@ -105,5 +105,5 @@ class CalendarAvailability {
         return [returnData];
     }
 }
-exports.CalendarAvailability = CalendarAvailability;
+exports.MeetQuickAvailability = MeetQuickAvailability;
 //# sourceMappingURL=MeetQuickAvailability.node.js.map
