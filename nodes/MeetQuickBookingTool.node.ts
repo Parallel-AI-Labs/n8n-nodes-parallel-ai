@@ -10,14 +10,14 @@ import {
 
 export class CalendarBookingTool implements INodeType {
   description: INodeTypeDescription = {
-    displayName: "Calendar Booking Tool",
-    name: "calendarBookingTool",
-    icon: "fa:calendar-check",
+    displayName: "MeetQuick Booking Tool",
+    name: "meetQuickBookingTool",
+    icon: "file:meetquick.png",
     group: ["transform"],
     version: 1,
-    description: "Reserve a calendar meeting time - AI Tool for MCP Server",
+    description: "Reserve a MeetQuick meeting - AI Tool for MCP Server",
     defaults: {
-      name: "Calendar Booking Tool",
+      name: "MeetQuick Booking Tool",
     },
     inputs: [],
     outputs: [NodeConnectionType.AiTool],

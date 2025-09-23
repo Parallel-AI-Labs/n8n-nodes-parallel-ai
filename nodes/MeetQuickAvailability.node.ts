@@ -20,14 +20,14 @@ interface ICalendarAvailabilityResponse extends IDataObject {
 
 export class CalendarAvailability implements INodeType {
   description: INodeTypeDescription = {
-    displayName: "Calendar Availability",
-    name: "calendarAvailability",
-    icon: "fa:calendar",
+    displayName: "MeetQuick Availability",
+    name: "meetQuickAvailability",
+    icon: "file:meetquick.png",
     group: ["transform"],
     version: 1,
-    description: "Get available calendar times for scheduling meetings",
+    description: "Get available MeetQuick calendar times for scheduling meetings",
     defaults: {
-      name: "Calendar Availability",
+      name: "MeetQuick Availability",
     },
     inputs: [NodeConnectionType.Main],
     outputs: [NodeConnectionType.Main],

@@ -23,10 +23,10 @@
       "main/nodes/ParallelAi.node.js",
       "main/nodes/ParallelAiChatModel.node.js",
       "main/nodes/KnowledgeBaseRetriever.node.js",
-      "main/nodes/CalendarAvailability.node.js",
-      "main/nodes/CalendarBooking.node.js",
-      "main/nodes/CalendarAvailabilityTool.node.js",
-      "main/nodes/CalendarBookingTool.node.js"
+      "main/nodes/MeetQuickAvailability.node.js",
+      "main/nodes/MeetQuickBooking.node.js",
+      "main/nodes/MeetQuickAvailabilityTool.node.js",
+      "main/nodes/MeetQuickBookingTool.node.js"
     ]
   },
   "publishConfig": {

@@ -19,14 +19,14 @@ interface IBookingRequest extends IDataObject {
 
 export class CalendarBooking implements INodeType {
   description: INodeTypeDescription = {
-    displayName: "Calendar Booking",
-    name: "calendarBooking",
-    icon: "fa:calendar-check",
+    displayName: "MeetQuick Booking",
+    name: "meetQuickBooking",
+    icon: "file:meetquick.png",
     group: ["transform"],
     version: 1,
-    description: "Reserve a calendar meeting time",
+    description: "Reserve a MeetQuick meeting time",
     defaults: {
-      name: "Calendar Booking",
+      name: "MeetQuick Booking",
     },
     inputs: [NodeConnectionType.Main],
     outputs: [NodeConnectionType.Main],

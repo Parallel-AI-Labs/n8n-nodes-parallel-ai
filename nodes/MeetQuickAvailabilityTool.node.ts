@@ -10,14 +10,14 @@ import {
 
 export class CalendarAvailabilityTool implements INodeType {
   description: INodeTypeDescription = {
-    displayName: "Calendar Availability Tool",
-    name: "calendarAvailabilityTool",
-    icon: "fa:calendar",
+    displayName: "MeetQuick Availability Tool",
+    name: "meetQuickAvailabilityTool",
+    icon: "file:meetquick.png",
     group: ["transform"],
     version: 1,
-    description: "Get available calendar times - AI Tool for MCP Server",
+    description: "Get available MeetQuick times - AI Tool for MCP Server",
     defaults: {
-      name: "Calendar Availability Tool",
+      name: "MeetQuick Availability Tool",
     },
     inputs: [],
     outputs: [NodeConnectionType.AiTool],
