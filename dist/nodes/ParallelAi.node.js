@@ -17,7 +17,9 @@ class ParallelAi {
                 name: "Parallel AI",
             },
             inputs: ["main"],
-            outputs: ["main"],
+            outputs: ["main", "ai_tool"],
+            outputNames: ["Standard Output", "AI Tool Output"],
+            usableAsTool: true,
             credentials: [
                 {
                     name: "parallelAiApi",
@@ -2263,7 +2265,31 @@ class ParallelAi {
                 description: 'Please check the documentation for supported resources',
             });
         }
-        return [this.helpers.returnJsonArray(Array.isArray(responseData) ? responseData : [responseData])];
+        const standardOutput = Array.isArray(responseData) ? responseData : [responseData];
+        let aiToolOutput = standardOutput;
+        if (resource === "employee" && operation === "chat" && (responseData === null || responseData === void 0 ? void 0 : responseData.response)) {
+            aiToolOutput = [{
+                    output: responseData.response,
+                    metadata: {
+                        employeeId: this.getNodeParameter("employeeId", 0),
+                        operation: "chat",
+                        model: this.getNodeParameter("model", 0),
+                    }
+                }];
+        }
+        else if (resource === "document" && operation === "search" && (responseData === null || responseData === void 0 ? void 0 : responseData.results)) {
+            aiToolOutput = [{
+                    output: responseData.results,
+                    metadata: {
+                        operation: "document_search",
+                        query: this.getNodeParameter("query", 0),
+                    }
+                }];
+        }
+        return [
+            this.helpers.returnJsonArray(standardOutput),
+            this.helpers.returnJsonArray(aiToolOutput),
+        ];
     }
 }
 exports.ParallelAi = ParallelAi;

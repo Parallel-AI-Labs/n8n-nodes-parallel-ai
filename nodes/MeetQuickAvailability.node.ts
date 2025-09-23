@@ -8,16 +8,6 @@ import {
   NodeOperationError,
 } from "n8n-workflow";
 
-interface ICalendarEvent extends IDataObject {
-  id: string;
-  start: string;
-  end: string;
-}
-
-interface ICalendarAvailabilityResponse extends IDataObject {
-  events: ICalendarEvent[];
-}
-
 export class CalendarAvailability implements INodeType {
   description: INodeTypeDescription = {
     displayName: "MeetQuick Availability",

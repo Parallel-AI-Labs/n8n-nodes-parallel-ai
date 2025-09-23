@@ -1,6 +1,6 @@
 {
-    "name": "n8n-nodes-parallel-ai",
-    "version": "0.1.0",
+    "name": "@parallel-ai/n8n-nodes-parallel-ai",
+    "version": "0.2.0",
     "description": "n8n nodes for Parallel AI",
     "main": "index.ts",
     "types": "dist/index.d.ts",
@@ -21,8 +21,16 @@
         ],
         "nodes": [
             "main/nodes/ParallelAi.node.js",
-            "main/nodes/ParallelAiChatModel.node.js"
+            "main/nodes/ParallelAiChatModel.node.js",
+            "main/nodes/KnowledgeBaseRetriever.node.js",
+            "main/nodes/MeetQuickAvailability.node.js",
+            "main/nodes/MeetQuickBooking.node.js",
+            "main/nodes/MeetQuickAvailabilityTool.node.js",
+            "main/nodes/MeetQuickBookingTool.node.js"
         ]
+    },
+    "publishConfig": {
+        "access": "public"
     },
     "scripts": {
         "build": "tsc && gulp build:icons",
@@ -30,7 +38,7 @@
         "format": "prettier nodes credentials --write",
         "lint": "eslint nodes credentials package.json",
         "lintfix": "eslint nodes credentials package.json --fix",
-        "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+        "prepublishOnly": "npm run build"
     },
     "devDependencies": {
         "@types/express": "^4.17.6",
@@ -43,8 +51,5 @@
         "prettier": "^2.7.1",
         "typescript": "~4.8.4"
     },
-    "license": "MIT",
-    "dependencies": {
-        "langchain": "^0.3.29"
-    }
+    "license": "MIT"
 }
