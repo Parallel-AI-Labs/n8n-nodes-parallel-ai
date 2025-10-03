@@ -21,6 +21,7 @@ export class MeetQuickAvailability implements INodeType {
     },
     inputs: [NodeConnectionType.Main],
     outputs: [NodeConnectionType.Main],
+    usableAsTool: true,
     properties: [
       {
         displayName: "Username",

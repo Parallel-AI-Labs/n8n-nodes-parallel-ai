@@ -14,10 +14,10 @@ interface IBookingRequest extends IDataObject {
   start: string;
   name: string;
   note: string;
-  id: string;
+  link: string;
 }
 
-export class CalendarBooking implements INodeType {
+export class MeetQuickBooking implements INodeType {
   description: INodeTypeDescription = {
     displayName: "MeetQuick Booking",
     name: "meetQuickBooking",
@@ -30,6 +30,7 @@ export class CalendarBooking implements INodeType {
     },
     inputs: [NodeConnectionType.Main],
     outputs: [NodeConnectionType.Main],
+    usableAsTool: true,
     properties: [
       {
         displayName: "Username",
@@ -40,12 +41,12 @@ export class CalendarBooking implements INodeType {
         description: "Calendar username to book meeting for",
       },
       {
-        displayName: "Event ID",
-        name: "eventId",
+        displayName: "Event Name",
+        name: "eventName",
         type: "string",
         default: "",
         required: true,
-        description: "Event ID from calendar availability (event.id field)",
+        description: "Name of the calendar event type  (e.g., 30-min-chat)",
       },
       {
         displayName: "Attendee Email",
@@ -57,7 +58,7 @@ export class CalendarBooking implements INodeType {
       },
       {
         displayName: "Attendee Name",
-        name: "name",
+        name: "attendeeName",
         type: "string",
         default: "",
         required: true,
@@ -91,16 +92,16 @@ export class CalendarBooking implements INodeType {
 
     for (let i = 0; i < items.length; i++) {
       const username = this.getNodeParameter("username", i) as string;
-      const eventId = this.getNodeParameter("eventId", i) as string;
+      const eventName = this.getNodeParameter("eventName", i) as string;
       const email = this.getNodeParameter("email", i) as string;
-      const name = this.getNodeParameter("name", i) as string;
+      const attendeeName = this.getNodeParameter("attendeeName", i) as string;
       const start = this.getNodeParameter("start", i) as string;
       const note = this.getNodeParameter("note", i, "") as string;
 
-      if (!username || !eventId || !email || !name || !start) {
+      if (!username || !eventName || !email || !attendeeName || !start) {
         throw new NodeOperationError(
           this.getNode(),
-          "Username, event ID, email, name, and start time are required"
+          "Username, event name, email, name, and start time are required"
         );
       }
 
@@ -116,9 +117,9 @@ export class CalendarBooking implements INodeType {
         email,
         username,
         start,
-        name,
+        name: attendeeName,
         note,
-        id: eventId,
+        link: eventName,
       };
 
       const options = {

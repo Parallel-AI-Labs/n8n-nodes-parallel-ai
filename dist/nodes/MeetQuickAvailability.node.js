@@ -16,6 +16,7 @@ class MeetQuickAvailability {
             },
             inputs: ["main"],
             outputs: ["main"],
+            usableAsTool: true,
             properties: [
                 {
                     displayName: "Username",

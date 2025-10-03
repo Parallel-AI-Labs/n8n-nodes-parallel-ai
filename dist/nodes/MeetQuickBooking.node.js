@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CalendarBooking = void 0;
+exports.MeetQuickBooking = void 0;
 const n8n_workflow_1 = require("n8n-workflow");
-class CalendarBooking {
+class MeetQuickBooking {
     constructor() {
         this.description = {
             displayName: "MeetQuick Booking",
@@ -16,6 +16,7 @@ class CalendarBooking {
             },
             inputs: ["main"],
             outputs: ["main"],
+            usableAsTool: true,
             properties: [
                 {
                     displayName: "Username",
@@ -26,12 +27,12 @@ class CalendarBooking {
                     description: "Calendar username to book meeting for",
                 },
                 {
-                    displayName: "Event ID",
-                    name: "eventId",
+                    displayName: "Event Name",
+                    name: "eventName",
                     type: "string",
                     default: "",
                     required: true,
-                    description: "Event ID from calendar availability (event.id field)",
+                    description: "Name of the calendar event type  (e.g., 30-min-chat)",
                 },
                 {
                     displayName: "Attendee Email",
@@ -43,7 +44,7 @@ class CalendarBooking {
                 },
                 {
                     displayName: "Attendee Name",
-                    name: "name",
+                    name: "attendeeName",
                     type: "string",
                     default: "",
                     required: true,
@@ -76,13 +77,13 @@ class CalendarBooking {
         const returnData = [];
         for (let i = 0; i < items.length; i++) {
             const username = this.getNodeParameter("username", i);
-            const eventId = this.getNodeParameter("eventId", i);
+            const eventName = this.getNodeParameter("eventName", i);
             const email = this.getNodeParameter("email", i);
-            const name = this.getNodeParameter("name", i);
+            const attendeeName = this.getNodeParameter("attendeeName", i);
             const start = this.getNodeParameter("start", i);
             const note = this.getNodeParameter("note", i, "");
-            if (!username || !eventId || !email || !name || !start) {
-                throw new n8n_workflow_1.NodeOperationError(this.getNode(), "Username, event ID, email, name, and start time are required");
+            if (!username || !eventName || !email || !attendeeName || !start) {
+                throw new n8n_workflow_1.NodeOperationError(this.getNode(), "Username, event name, email, name, and start time are required");
             }
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
@@ -92,9 +93,9 @@ class CalendarBooking {
                 email,
                 username,
                 start,
-                name,
+                name: attendeeName,
                 note,
-                id: eventId,
+                link: eventName,
             };
             const options = {
                 method: "POST",
@@ -124,5 +125,5 @@ class CalendarBooking {
         return [returnData];
     }
 }
-exports.CalendarBooking = CalendarBooking;
+exports.MeetQuickBooking = MeetQuickBooking;
 //# sourceMappingURL=MeetQuickBooking.node.js.map
