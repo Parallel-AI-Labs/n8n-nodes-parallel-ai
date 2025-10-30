@@ -3,7 +3,7 @@ import {
   IExecuteFunctions,
   ILoadOptionsFunctions,
   INodeExecutionData,
-  INodeListSearchResult,
+  INodePropertyOptions,
   INodeType,
   INodeTypeDescription,
   NodeConnectionType,
@@ -68,6 +68,11 @@ export class BrowserTask implements INodeType {
             value: "authenticated",
             description: "Use an authenticated browser session from an integration",
           },
+          {
+            name: "Residential Proxy",
+            value: "residential",
+            description: "Use a residential proxy with US zipcode targeting",
+          },
         ],
         default: "regular",
         description: "Type of browser session to use",
@@ -75,8 +80,8 @@ export class BrowserTask implements INodeType {
       {
         displayName: "Browser Integration",
         name: "integrationId",
-        type: "resourceLocator",
-        default: { mode: "list", value: "" },
+        type: "options",
+        default: "",
         required: true,
         description:
           "Browser integration to use for authenticated sessions (LinkedIn, Twitter, etc.)",
@@ -85,32 +90,42 @@ export class BrowserTask implements INodeType {
             sessionType: ["authenticated"],
           },
         },
-        modes: [
-          {
-            displayName: "From List",
-            name: "list",
-            type: "list",
-            typeOptions: {
-              searchListMethod: "searchBrowserIntegrations",
-              searchable: true,
-            },
+        typeOptions: {
+          loadOptionsMethod: "getBrowserIntegrations",
+        },
+        options: [],
+      },
+      {
+        displayName: "Zipcode",
+        name: "zipcode",
+        type: "string",
+        default: "",
+        required: true,
+        placeholder: "e.g. 94102",
+        description:
+          "5-digit US zipcode for residential proxy targeting",
+        displayOptions: {
+          show: {
+            sessionType: ["residential"],
           },
-          {
-            displayName: "By ID",
-            name: "id",
-            type: "string",
-            placeholder: "e.g. abc123",
-          },
-        ],
+        },
+      },
+      {
+        displayName: "Use Vision",
+        name: "useVision",
+        type: "boolean",
+        default: false,
+        description:
+          "Enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
       },
     ],
   };
 
   methods = {
-    listSearch: {
-      async searchBrowserIntegrations(
+    loadOptions: {
+      async getBrowserIntegrations(
         this: ILoadOptionsFunctions
-      ): Promise<INodeListSearchResult> {
+      ): Promise<INodePropertyOptions[]> {
         const credentials = await this.getCredentials("parallelAiApi");
         const apiKey = credentials.apiKey as string;
         const baseUrl = credentials.baseUrl as string;
@@ -127,18 +142,32 @@ export class BrowserTask implements INodeType {
           };
 
           const response = await this.helpers.request!(options);
+          const integrations = response.integrations || [];
 
-          const results = response.integrations.map(
-            (integration: IDataObject) => ({
-              name: `${integration.name} (${integration.type})`,
-              value: integration.id,
-            })
-          );
+          if (!integrations.length) {
+            return [
+              {
+                name: "No browser integrations found",
+                value: "",
+                description: "Create a browser integration first",
+              },
+            ];
+          }
 
-          return { results };
+          return integrations.map((integration: IDataObject) => ({
+            name: `${integration.name} (${integration.type})`,
+            value: integration.id as string,
+            description: `Status: ${integration.status || "active"}`,
+          }));
         } catch (error) {
           console.error("Error loading browser integrations:", error);
-          return { results: [] };
+          return [
+            {
+              name: "Error loading browser integrations",
+              value: "",
+              description: "Please check API connection",
+            },
+          ];
         }
       },
     },
@@ -152,12 +181,18 @@ export class BrowserTask implements INodeType {
     // Get parameters
     const task = this.getNodeParameter("task", 0) as string;
     const sessionType = this.getNodeParameter("sessionType", 0) as string;
+    const useVision = this.getNodeParameter("useVision", 0) as boolean;
 
-    // Handle resource locator for integration ID
+    // Get integration ID for authenticated sessions
     let integrationId: string | undefined = undefined;
     if (sessionType === "authenticated") {
-      const integrationIdResource = this.getNodeParameter("integrationId", 0) as IDataObject;
-      integrationId = integrationIdResource.value as string;
+      integrationId = this.getNodeParameter("integrationId", 0) as string;
+    }
+
+    // Get zipcode for residential proxy
+    let zipcode: string | undefined = undefined;
+    if (sessionType === "residential") {
+      zipcode = this.getNodeParameter("zipcode", 0) as string;
     }
 
     // Get inputs from connected nodes if available
@@ -187,10 +222,15 @@ export class BrowserTask implements INodeType {
     const requestBody: IDataObject = {
       task: effectiveTask,
       sessionType,
+      useVision,
     };
 
     if (integrationId) {
       requestBody.integrationId = integrationId;
+    }
+
+    if (zipcode) {
+      requestBody.zipcode = zipcode;
     }
 
     // Define the API request options
@@ -212,8 +252,12 @@ export class BrowserTask implements INodeType {
       }"`
     );
     console.log(`Session type: ${sessionType}`);
+    console.log(`Use vision: ${useVision}`);
     if (integrationId) {
       console.log(`Integration ID: ${integrationId}`);
+    }
+    if (zipcode) {
+      console.log(`Zipcode: ${zipcode}`);
     }
 
     try {
@@ -236,10 +280,15 @@ export class BrowserTask implements INodeType {
         creditsCharged: responseData.creditsCharged,
         task: effectiveTask,
         sessionType,
+        useVision,
       };
 
       if (integrationId) {
         output.integrationId = integrationId;
+      }
+
+      if (zipcode) {
+        output.zipcode = zipcode;
       }
 
       console.log(
