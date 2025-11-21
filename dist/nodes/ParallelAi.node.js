@@ -609,13 +609,13 @@ class ParallelAi {
                     type: "options",
                     options: [
                         {
-                            name: "Regular",
-                            value: "regular",
+                            name: "No Session (Basic)",
+                            value: "none",
                             description: "Use a standard browser session without authentication",
                         },
                         {
-                            name: "Authenticated",
-                            value: "authenticated",
+                            name: "Browser Session Integration",
+                            value: "integration",
                             description: "Use an authenticated browser session from an integration",
                         },
                         {
@@ -624,7 +624,7 @@ class ParallelAi {
                             description: "Use a residential proxy with US zipcode targeting",
                         },
                     ],
-                    default: "regular",
+                    default: "none",
                     description: "Type of browser session to use",
                     displayOptions: {
                         show: {
@@ -646,7 +646,7 @@ class ParallelAi {
                             resource: ["employee"],
                             operation: ["chat"],
                             browserTaskEnabled: [true],
-                            browserSessionType: ["authenticated"],
+                            browserSessionType: ["integration"],
                         },
                     },
                     typeOptions: {
@@ -1813,9 +1813,9 @@ class ParallelAi {
                 const researchTask = this.getNodeParameter("researchTask", 0, false);
                 const documentCreation = this.getNodeParameter("documentCreation", 0, false);
                 const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false);
-                const browserSessionType = browserTaskEnabled ? this.getNodeParameter("browserSessionType", 0, "regular") : "regular";
+                const browserSessionType = browserTaskEnabled ? this.getNodeParameter("browserSessionType", 0, "none") : "none";
                 let browserIntegrationId = null;
-                if (browserTaskEnabled && browserSessionType === "authenticated") {
+                if (browserTaskEnabled && browserSessionType === "integration") {
                     browserIntegrationId = this.getNodeParameter("browserIntegrationId", 0, "");
                 }
                 let browserZipcode = null;

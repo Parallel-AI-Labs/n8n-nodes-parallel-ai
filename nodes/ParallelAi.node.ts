@@ -632,13 +632,13 @@ export class ParallelAi implements INodeType {
         type: "options",
         options: [
           {
-            name: "Regular",
-            value: "regular",
+            name: "No Session (Basic)",
+            value: "none",
             description: "Use a standard browser session without authentication",
           },
           {
-            name: "Authenticated",
-            value: "authenticated",
+            name: "Browser Session Integration",
+            value: "integration",
             description: "Use an authenticated browser session from an integration",
           },
           {
@@ -647,7 +647,7 @@ export class ParallelAi implements INodeType {
             description: "Use a residential proxy with US zipcode targeting",
           },
         ],
-        default: "regular",
+        default: "none",
         description: "Type of browser session to use",
         displayOptions: {
           show: {
@@ -669,7 +669,7 @@ export class ParallelAi implements INodeType {
             resource: ["employee"],
             operation: ["chat"],
             browserTaskEnabled: [true],
-            browserSessionType: ["authenticated"],
+            browserSessionType: ["integration"],
           },
         },
         typeOptions: {
@@ -1908,11 +1908,11 @@ export class ParallelAi implements INodeType {
 
         // Get browser task settings
         const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false) as boolean;
-        const browserSessionType = browserTaskEnabled ? (this.getNodeParameter("browserSessionType", 0, "regular") as string) : "regular";
+        const browserSessionType = browserTaskEnabled ? (this.getNodeParameter("browserSessionType", 0, "none") as string) : "none";
 
-        // Get integration ID for authenticated sessions
+        // Get integration ID for integration sessions
         let browserIntegrationId: string | null = null;
-        if (browserTaskEnabled && browserSessionType === "authenticated") {
+        if (browserTaskEnabled && browserSessionType === "integration") {
           browserIntegrationId = this.getNodeParameter("browserIntegrationId", 0, "") as string;
         }
 
@@ -1922,7 +1922,7 @@ export class ParallelAi implements INodeType {
           browserZipcode = this.getNodeParameter("browserZipcode", 0, "") as string;
         }
 
-        // Construct browser task object
+        // Construct browser task object matching backend expectations
         const browserTask: any = {
           enabled: browserTaskEnabled,
           sessionType: browserSessionType,
