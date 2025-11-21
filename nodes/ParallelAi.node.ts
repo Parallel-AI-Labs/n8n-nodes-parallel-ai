@@ -575,6 +575,45 @@ export class ParallelAi implements INodeType {
         },
       },
       {
+        displayName: "Smart List Management",
+        name: "lists",
+        type: "boolean",
+        default: false,
+        description: "AI can create, manage, and update Smart Lists on the platform",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+          },
+        },
+      },
+      {
+        displayName: "Research Task",
+        name: "researchTask",
+        type: "boolean",
+        default: false,
+        description: "AI can delegate complex research tasks to a specialized research agent for comprehensive, real-time information gathering",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+          },
+        },
+      },
+      {
+        displayName: "Create Documents",
+        name: "documentCreation",
+        type: "boolean",
+        default: false,
+        description: "AI can generate PDF, DOCX, or CSV files and email them to you",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+          },
+        },
+      },
+      {
         displayName: "Enable Browser Tasks",
         name: "browserTaskEnabled",
         type: "boolean",
@@ -1862,6 +1901,11 @@ export class ParallelAi implements INodeType {
         const employee = this.getNodeParameter("employee", 0) as boolean;
         const temperature = this.getNodeParameter("temperature", 0) as number;
 
+        // Get tool settings
+        const lists = this.getNodeParameter("lists", 0, false) as boolean;
+        const researchTask = this.getNodeParameter("researchTask", 0, false) as boolean;
+        const documentCreation = this.getNodeParameter("documentCreation", 0, false) as boolean;
+
         // Get browser task settings
         const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false) as boolean;
         const browserSessionType = browserTaskEnabled ? (this.getNodeParameter("browserSessionType", 0, "regular") as string) : "regular";
@@ -1906,6 +1950,10 @@ export class ParallelAi implements INodeType {
           company,
           employee,
           temperature,
+          // Tool settings
+          lists,
+          researchTask,
+          documentCreation,
           browserTask,
           strategy: "function-chain", // Always use function-chain, backend will handle model compatibility
           // Default values for other settings that aren't included in the node UI

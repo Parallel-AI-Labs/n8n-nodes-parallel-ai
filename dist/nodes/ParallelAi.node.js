@@ -552,6 +552,45 @@ class ParallelAi {
                     },
                 },
                 {
+                    displayName: "Smart List Management",
+                    name: "lists",
+                    type: "boolean",
+                    default: false,
+                    description: "AI can create, manage, and update Smart Lists on the platform",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Research Task",
+                    name: "researchTask",
+                    type: "boolean",
+                    default: false,
+                    description: "AI can delegate complex research tasks to a specialized research agent for comprehensive, real-time information gathering",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Create Documents",
+                    name: "documentCreation",
+                    type: "boolean",
+                    default: false,
+                    description: "AI can generate PDF, DOCX, or CSV files and email them to you",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                        },
+                    },
+                },
+                {
                     displayName: "Enable Browser Tasks",
                     name: "browserTaskEnabled",
                     type: "boolean",
@@ -1770,6 +1809,9 @@ class ParallelAi {
                 const company = this.getNodeParameter("company", 0);
                 const employee = this.getNodeParameter("employee", 0);
                 const temperature = this.getNodeParameter("temperature", 0);
+                const lists = this.getNodeParameter("lists", 0, false);
+                const researchTask = this.getNodeParameter("researchTask", 0, false);
+                const documentCreation = this.getNodeParameter("documentCreation", 0, false);
                 const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false);
                 const browserSessionType = browserTaskEnabled ? this.getNodeParameter("browserSessionType", 0, "regular") : "regular";
                 let browserIntegrationId = null;
@@ -1803,6 +1845,9 @@ class ParallelAi {
                     company,
                     employee,
                     temperature,
+                    lists,
+                    researchTask,
+                    documentCreation,
                     browserTask,
                     strategy: "function-chain",
                     documentScope: "root",
