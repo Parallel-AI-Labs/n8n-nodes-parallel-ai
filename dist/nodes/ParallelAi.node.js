@@ -540,8 +540,8 @@ class ParallelAi {
                     },
                 },
                 {
-                    displayName: "Advanced Settings",
-                    name: "advancedSection",
+                    displayName: "Tools",
+                    name: "toolsSection",
                     type: "notice",
                     default: "",
                     displayOptions: {
@@ -552,21 +552,91 @@ class ParallelAi {
                     },
                 },
                 {
-                    displayName: "Strategy",
-                    name: "strategy",
+                    displayName: "Enable Browser Tasks",
+                    name: "browserTaskEnabled",
+                    type: "boolean",
+                    default: false,
+                    description: "Allow the AI to control a web browser for automation tasks",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Browser Session Type",
+                    name: "browserSessionType",
                     type: "options",
                     options: [
                         {
-                            name: "One Shot",
-                            value: "one-shot",
+                            name: "Regular",
+                            value: "regular",
+                            description: "Use a standard browser session without authentication",
                         },
                         {
-                            name: "Function Chain",
-                            value: "chain",
+                            name: "Authenticated",
+                            value: "authenticated",
+                            description: "Use an authenticated browser session from an integration",
+                        },
+                        {
+                            name: "Residential Proxy",
+                            value: "residential",
+                            description: "Use a residential proxy with US zipcode targeting",
                         },
                     ],
-                    default: "one-shot",
-                    description: "Reasoning strategy for the AI",
+                    default: "regular",
+                    description: "Type of browser session to use",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                            browserTaskEnabled: [true],
+                        },
+                    },
+                },
+                {
+                    displayName: "Browser Integration",
+                    name: "browserIntegrationId",
+                    type: "options",
+                    default: "",
+                    required: true,
+                    description: "Browser integration to use for authenticated sessions (LinkedIn, Twitter, etc.)",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                            browserTaskEnabled: [true],
+                            browserSessionType: ["authenticated"],
+                        },
+                    },
+                    typeOptions: {
+                        loadOptionsMethod: "getBrowserIntegrations",
+                    },
+                    options: [],
+                },
+                {
+                    displayName: "Zipcode",
+                    name: "browserZipcode",
+                    type: "string",
+                    default: "",
+                    required: true,
+                    placeholder: "e.g. 94102",
+                    description: "5-digit US zipcode for residential proxy targeting",
+                    displayOptions: {
+                        show: {
+                            resource: ["employee"],
+                            operation: ["chat"],
+                            browserTaskEnabled: [true],
+                            browserSessionType: ["residential"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Advanced Settings",
+                    name: "advancedSection",
+                    type: "notice",
+                    default: "",
                     displayOptions: {
                         show: {
                             resource: ["employee"],
@@ -1554,6 +1624,47 @@ class ParallelAi {
         };
         this.methods = {
             loadOptions: {
+                async getBrowserIntegrations() {
+                    const credentials = await this.getCredentials("parallelAiApi");
+                    const baseUrl = credentials.baseUrl;
+                    const apiKey = credentials.apiKey;
+                    try {
+                        const options = {
+                            method: "GET",
+                            uri: `${baseUrl}/api/v0/browser-integrations`,
+                            json: true,
+                            headers: {
+                                "X-API-KEY": apiKey,
+                            },
+                        };
+                        const response = await this.helpers.request(options);
+                        const integrations = response.integrations || [];
+                        if (!integrations.length) {
+                            return [
+                                {
+                                    name: "No browser integrations found",
+                                    value: "",
+                                    description: "Create a browser integration first",
+                                },
+                            ];
+                        }
+                        return integrations.map((integration) => ({
+                            name: `${integration.name} (${integration.type})`,
+                            value: integration.id,
+                            description: `Status: ${integration.status || "active"}`,
+                        }));
+                    }
+                    catch (error) {
+                        console.error("Error loading browser integrations:", error);
+                        return [
+                            {
+                                name: "Error loading browser integrations",
+                                value: "",
+                                description: "Please check API connection",
+                            },
+                        ];
+                    }
+                },
                 async getEmployees() {
                     const credentials = await this.getCredentials("parallelAiApi");
                     const baseUrl = credentials.baseUrl;
@@ -1568,7 +1679,7 @@ class ParallelAi {
                             },
                         };
                         const responseData = await this.helpers.request(options);
-                        const employees = responseData || [];
+                        const employees = responseData.employees || [];
                         if (!employees.length) {
                             return [{ name: "No employees found", value: "" }];
                         }
@@ -1658,8 +1769,27 @@ class ParallelAi {
                 const memoryScope = longTermMemories ? this.getNodeParameter("memoryScope", 0) : "chat";
                 const company = this.getNodeParameter("company", 0);
                 const employee = this.getNodeParameter("employee", 0);
-                const strategy = this.getNodeParameter("strategy", 0);
                 const temperature = this.getNodeParameter("temperature", 0);
+                const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false);
+                const browserSessionType = browserTaskEnabled ? this.getNodeParameter("browserSessionType", 0, "regular") : "regular";
+                let browserIntegrationId = null;
+                if (browserTaskEnabled && browserSessionType === "authenticated") {
+                    browserIntegrationId = this.getNodeParameter("browserIntegrationId", 0, "");
+                }
+                let browserZipcode = null;
+                if (browserTaskEnabled && browserSessionType === "residential") {
+                    browserZipcode = this.getNodeParameter("browserZipcode", 0, "");
+                }
+                const browserTask = {
+                    enabled: browserTaskEnabled,
+                    sessionType: browserSessionType,
+                };
+                if (browserIntegrationId) {
+                    browserTask.integrationId = browserIntegrationId;
+                }
+                if (browserZipcode) {
+                    browserTask.zipcode = browserZipcode;
+                }
                 const contextSettings = {
                     model,
                     documents,
@@ -1672,8 +1802,9 @@ class ParallelAi {
                     memoryScope,
                     company,
                     employee,
-                    strategy,
                     temperature,
+                    browserTask,
+                    strategy: "function-chain",
                     documentScope: "root",
                     documentPath: "/",
                     documentStrategy: "similarity-ranking",

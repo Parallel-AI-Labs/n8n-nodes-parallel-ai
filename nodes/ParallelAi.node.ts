@@ -563,8 +563,8 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Advanced Settings",
-        name: "advancedSection",
+        displayName: "Tools",
+        name: "toolsSection",
         type: "notice",
         default: "",
         displayOptions: {
@@ -575,21 +575,91 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Strategy",
-        name: "strategy",
+        displayName: "Enable Browser Tasks",
+        name: "browserTaskEnabled",
+        type: "boolean",
+        default: false,
+        description: "Allow the AI to control a web browser for automation tasks",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+          },
+        },
+      },
+      {
+        displayName: "Browser Session Type",
+        name: "browserSessionType",
         type: "options",
         options: [
           {
-            name: "One Shot",
-            value: "one-shot",
+            name: "Regular",
+            value: "regular",
+            description: "Use a standard browser session without authentication",
           },
           {
-            name: "Function Chain",
-            value: "chain",
+            name: "Authenticated",
+            value: "authenticated",
+            description: "Use an authenticated browser session from an integration",
+          },
+          {
+            name: "Residential Proxy",
+            value: "residential",
+            description: "Use a residential proxy with US zipcode targeting",
           },
         ],
-        default: "one-shot",
-        description: "Reasoning strategy for the AI",
+        default: "regular",
+        description: "Type of browser session to use",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+            browserTaskEnabled: [true],
+          },
+        },
+      },
+      {
+        displayName: "Browser Integration",
+        name: "browserIntegrationId",
+        type: "options",
+        default: "",
+        required: true,
+        description: "Browser integration to use for authenticated sessions (LinkedIn, Twitter, etc.)",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+            browserTaskEnabled: [true],
+            browserSessionType: ["authenticated"],
+          },
+        },
+        typeOptions: {
+          loadOptionsMethod: "getBrowserIntegrations",
+        },
+        options: [],
+      },
+      {
+        displayName: "Zipcode",
+        name: "browserZipcode",
+        type: "string",
+        default: "",
+        required: true,
+        placeholder: "e.g. 94102",
+        description: "5-digit US zipcode for residential proxy targeting",
+        displayOptions: {
+          show: {
+            resource: ["employee"],
+            operation: ["chat"],
+            browserTaskEnabled: [true],
+            browserSessionType: ["residential"],
+          },
+        },
+      },
+      {
+        displayName: "Advanced Settings",
+        name: "advancedSection",
+        type: "notice",
+        default: "",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -1620,6 +1690,51 @@ export class ParallelAi implements INodeType {
 
   methods = {
     loadOptions: {
+      async getBrowserIntegrations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const credentials = await this.getCredentials("parallelAiApi");
+        const baseUrl = credentials.baseUrl as string;
+        const apiKey = credentials.apiKey as string;
+
+        try {
+          const options = {
+            method: "GET" as "GET",
+            uri: `${baseUrl}/api/v0/browser-integrations`,
+            json: true,
+            headers: {
+              "X-API-KEY": apiKey,
+            },
+          };
+
+          const response = await this.helpers.request!(options);
+          const integrations = response.integrations || [];
+
+          if (!integrations.length) {
+            return [
+              {
+                name: "No browser integrations found",
+                value: "",
+                description: "Create a browser integration first",
+              },
+            ];
+          }
+
+          return integrations.map((integration: any) => ({
+            name: `${integration.name} (${integration.type})`,
+            value: integration.id,
+            description: `Status: ${integration.status || "active"}`,
+          }));
+        } catch (error) {
+          console.error("Error loading browser integrations:", error);
+          return [
+            {
+              name: "Error loading browser integrations",
+              value: "",
+              description: "Please check API connection",
+            },
+          ];
+        }
+      },
+
       async getEmployees(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const credentials = await this.getCredentials("parallelAiApi");
         const baseUrl = credentials.baseUrl as string;
@@ -1638,7 +1753,7 @@ export class ParallelAi implements INodeType {
 
           // Make the request to fetch employees
           const responseData = await this.helpers.request!(options);
-          const employees = responseData || [];
+          const employees = responseData.employees || [];
 
           if (!employees.length) {
             return [{ name: "No employees found", value: "" }];
@@ -1745,11 +1860,40 @@ export class ParallelAi implements INodeType {
         const memoryScope = longTermMemories ? (this.getNodeParameter("memoryScope", 0) as string) : "chat";
         const company = this.getNodeParameter("company", 0) as boolean;
         const employee = this.getNodeParameter("employee", 0) as boolean;
-        const strategy = this.getNodeParameter("strategy", 0) as string;
         const temperature = this.getNodeParameter("temperature", 0) as number;
 
+        // Get browser task settings
+        const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false) as boolean;
+        const browserSessionType = browserTaskEnabled ? (this.getNodeParameter("browserSessionType", 0, "regular") as string) : "regular";
+
+        // Get integration ID for authenticated sessions
+        let browserIntegrationId: string | null = null;
+        if (browserTaskEnabled && browserSessionType === "authenticated") {
+          browserIntegrationId = this.getNodeParameter("browserIntegrationId", 0, "") as string;
+        }
+
+        // Get zipcode for residential proxy
+        let browserZipcode: string | null = null;
+        if (browserTaskEnabled && browserSessionType === "residential") {
+          browserZipcode = this.getNodeParameter("browserZipcode", 0, "") as string;
+        }
+
+        // Construct browser task object
+        const browserTask: any = {
+          enabled: browserTaskEnabled,
+          sessionType: browserSessionType,
+        };
+
+        if (browserIntegrationId) {
+          browserTask.integrationId = browserIntegrationId;
+        }
+
+        if (browserZipcode) {
+          browserTask.zipcode = browserZipcode;
+        }
+
         // Construct settings object with all context settings
-        const contextSettings = {
+        const contextSettings: any = {
           model,
           documents,
           searchEngine,
@@ -1761,8 +1905,9 @@ export class ParallelAi implements INodeType {
           memoryScope,
           company,
           employee,
-          strategy,
           temperature,
+          browserTask,
+          strategy: "function-chain", // Always use function-chain, backend will handle model compatibility
           // Default values for other settings that aren't included in the node UI
           documentScope: "root",
           documentPath: "/",

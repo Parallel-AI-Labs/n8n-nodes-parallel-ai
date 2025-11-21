@@ -3,6 +3,7 @@ export declare class ParallelAi implements INodeType {
     description: INodeTypeDescription;
     methods: {
         loadOptions: {
+            getBrowserIntegrations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
             getEmployees(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
             getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
         };
