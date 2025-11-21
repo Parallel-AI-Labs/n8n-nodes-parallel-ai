@@ -42,6 +42,10 @@ class ParallelAi {
                             value: "image",
                         },
                         {
+                            name: "Video",
+                            value: "video",
+                        },
+                        {
                             name: "List",
                             value: "list",
                         },
@@ -295,6 +299,38 @@ class ParallelAi {
                             value: "getModels",
                             action: "Get available image models",
                             description: "Get a list of available image generation models",
+                        },
+                    ],
+                    default: "generate",
+                },
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    noDataExpression: true,
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                        },
+                    },
+                    options: [
+                        {
+                            name: "Generate",
+                            value: "generate",
+                            action: "Generate a video",
+                            description: "Create an AI-generated video",
+                        },
+                        {
+                            name: "Get Models",
+                            value: "getModels",
+                            action: "Get available video models",
+                            description: "Get a list of available video generation models",
+                        },
+                        {
+                            name: "Get Status",
+                            value: "getStatus",
+                            action: "Get video status",
+                            description: "Check the status of a video generation",
                         },
                     ],
                     default: "generate",
@@ -1460,35 +1496,54 @@ class ParallelAi {
                     displayName: "Model",
                     name: "imageModel",
                     type: "options",
+                    typeOptions: {
+                        loadOptionsMethod: "getImageModels",
+                    },
                     default: "gpt-image-1",
                     description: "AI model to use for image generation",
-                    options: [
-                        {
-                            name: "GPT Image",
-                            value: "gpt-image-1",
-                            description: "Latest text-to-image model from OpenAI",
+                    displayOptions: {
+                        show: {
+                            resource: ["image"],
+                            operation: ["generate"],
                         },
-                        {
-                            name: "Leonardo Default",
-                            value: "b24e16ff-06e3-43eb-8d33-4416c2d75876",
-                            description: "Default model for Leonardo.AI",
+                    },
+                },
+                {
+                    displayName: "Reference Images (Optional)",
+                    name: "referenceImagesSection",
+                    type: "notice",
+                    default: "",
+                    displayOptions: {
+                        show: {
+                            resource: ["image"],
+                            operation: ["generate"],
                         },
-                        {
-                            name: "Flux Schnell",
-                            value: "1dd50843-d653-4516-a8e3-f0238ee453ff",
-                            description: "Flux Schnell model from Leonardo.AI",
+                    },
+                },
+                {
+                    displayName: "Reference Image IDs",
+                    name: "referenceImageIds",
+                    type: "string",
+                    default: "",
+                    placeholder: "image-id-1,image-id-2",
+                    description: "Comma-separated list of image IDs to use as reference (for models that support image references)",
+                    displayOptions: {
+                        show: {
+                            resource: ["image"],
+                            operation: ["generate"],
                         },
-                        {
-                            name: "Leonardo Phoenix 1.0",
-                            value: "de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3",
-                            description: "Leonardo Phoenix 1.0 model",
-                        },
-                        {
-                            name: "Kino",
-                            value: "aa77f04e-3eec-4034-9c07-d0f619684628",
-                            description: "Kino model from Leonardo.AI, great for cinematic-style images",
-                        },
-                    ],
+                    },
+                },
+                {
+                    displayName: "Reference Image URLs",
+                    name: "referenceImageUrls",
+                    type: "string",
+                    typeOptions: {
+                        alwaysOpenEditWindow: true,
+                    },
+                    default: "",
+                    placeholder: "https://example.com/image1.jpg,https://example.com/image2.jpg",
+                    description: "Comma-separated list of image URLs to use as reference (for models that support image references)",
                     displayOptions: {
                         show: {
                             resource: ["image"],
@@ -1659,10 +1714,410 @@ class ParallelAi {
                         },
                     },
                 },
+                {
+                    displayName: "Prompt",
+                    name: "videoPrompt",
+                    type: "string",
+                    typeOptions: {
+                        alwaysOpenEditWindow: true,
+                    },
+                    default: "",
+                    required: true,
+                    description: "Text description of the video to generate",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Model",
+                    name: "videoModel",
+                    type: "options",
+                    typeOptions: {
+                        loadOptionsMethod: "getVideoModels",
+                    },
+                    default: "fal-ai/veo3",
+                    description: "AI model to use for video generation",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Duration (seconds)",
+                    name: "videoDuration",
+                    type: "number",
+                    default: 5,
+                    description: "Duration of the video in seconds",
+                    typeOptions: {
+                        minValue: 2,
+                        maxValue: 20,
+                    },
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Aspect Ratio",
+                    name: "videoAspectRatio",
+                    type: "options",
+                    options: [
+                        {
+                            name: "16:9 (Landscape)",
+                            value: "16:9",
+                        },
+                        {
+                            name: "9:16 (Portrait)",
+                            value: "9:16",
+                        },
+                        {
+                            name: "1:1 (Square)",
+                            value: "1:1",
+                        },
+                    ],
+                    default: "16:9",
+                    description: "Aspect ratio of the video",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Frame Images (Optional)",
+                    name: "frameImagesSection",
+                    type: "notice",
+                    default: "",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "First Frame URL",
+                    name: "firstFrameUrl",
+                    type: "string",
+                    default: "",
+                    placeholder: "https://example.com/first-frame.jpg",
+                    description: "URL of the first frame image (for first-last-frame models)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "First Frame ID",
+                    name: "firstFrameId",
+                    type: "string",
+                    default: "",
+                    placeholder: "image-id-123",
+                    description: "ID of the first frame image from your library",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Last Frame URL",
+                    name: "lastFrameUrl",
+                    type: "string",
+                    default: "",
+                    placeholder: "https://example.com/last-frame.jpg",
+                    description: "URL of the last frame image (for first-last-frame models)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Last Frame ID",
+                    name: "lastFrameId",
+                    type: "string",
+                    default: "",
+                    placeholder: "image-id-456",
+                    description: "ID of the last frame image from your library",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Image to Video (Optional)",
+                    name: "imageToVideoSection",
+                    type: "notice",
+                    default: "",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Source Image URL",
+                    name: "imageUrl",
+                    type: "string",
+                    default: "",
+                    placeholder: "https://example.com/source-image.jpg",
+                    description: "URL of the source image to animate (for image-to-video models)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Source Image ID",
+                    name: "imageId",
+                    type: "string",
+                    default: "",
+                    placeholder: "image-id-789",
+                    description: "ID of the source image from your library to animate",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Advanced Options",
+                    name: "videoAdvancedSection",
+                    type: "notice",
+                    default: "",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Resolution",
+                    name: "videoResolution",
+                    type: "options",
+                    options: [
+                        {
+                            name: "720p (1280x720)",
+                            value: "720p",
+                        },
+                        {
+                            name: "1080p (1920x1080)",
+                            value: "1080p",
+                        },
+                    ],
+                    default: "1080p",
+                    description: "Video resolution (for Sora 2 Pro)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Motion Intensity",
+                    name: "motionIntensity",
+                    type: "options",
+                    options: [
+                        {
+                            name: "Low",
+                            value: "low",
+                        },
+                        {
+                            name: "Medium",
+                            value: "medium",
+                        },
+                        {
+                            name: "High",
+                            value: "high",
+                        },
+                    ],
+                    default: "medium",
+                    description: "Intensity of motion in the video (for Kling models)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Camera Motion",
+                    name: "cameraMotion",
+                    type: "options",
+                    options: [
+                        {
+                            name: "Static",
+                            value: "static",
+                        },
+                        {
+                            name: "Pan",
+                            value: "pan",
+                        },
+                        {
+                            name: "Zoom",
+                            value: "zoom",
+                        },
+                        {
+                            name: "Dolly",
+                            value: "dolly",
+                        },
+                    ],
+                    default: "static",
+                    description: "Type of camera motion (for Kling models)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Style",
+                    name: "videoStyle",
+                    type: "options",
+                    options: [
+                        {
+                            name: "Realistic",
+                            value: "realistic",
+                        },
+                        {
+                            name: "Cinematic",
+                            value: "cinematic",
+                        },
+                        {
+                            name: "Animated",
+                            value: "animated",
+                        },
+                        {
+                            name: "Artistic",
+                            value: "artistic",
+                        },
+                    ],
+                    default: "realistic",
+                    description: "Visual style of the video (for Kling models)",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["generate"],
+                        },
+                    },
+                },
+                {
+                    displayName: "Video ID",
+                    name: "videoId",
+                    type: "string",
+                    default: "",
+                    required: true,
+                    description: "ID of the video to check status for",
+                    displayOptions: {
+                        show: {
+                            resource: ["video"],
+                            operation: ["getStatus"],
+                        },
+                    },
+                },
             ],
         };
         this.methods = {
             loadOptions: {
+                async getImageModels() {
+                    const credentials = await this.getCredentials("parallelAiApi");
+                    const baseUrl = credentials.baseUrl;
+                    try {
+                        const options = {
+                            method: "GET",
+                            uri: `${baseUrl}/api/v0/images/models`,
+                            json: true,
+                        };
+                        const models = await this.helpers.request(options);
+                        if (!models || !Array.isArray(models) || models.length === 0) {
+                            return [
+                                {
+                                    name: "GPT Image 1 (default)",
+                                    value: "gpt-image-1",
+                                    description: "Default image model",
+                                },
+                            ];
+                        }
+                        return models.map((model) => ({
+                            name: `${model.name}${model.tags && model.tags.length > 0 ? ` (${model.tags.join(", ")})` : ""}`,
+                            value: model.id,
+                            description: model.description || `${model.provider} - ${model.credits} credits`,
+                        }));
+                    }
+                    catch (error) {
+                        console.error("Error loading image models:", error);
+                        return [
+                            {
+                                name: "GPT Image 1 (default)",
+                                value: "gpt-image-1",
+                                description: "Using default - API connection error",
+                            },
+                        ];
+                    }
+                },
+                async getVideoModels() {
+                    const credentials = await this.getCredentials("parallelAiApi");
+                    const baseUrl = credentials.baseUrl;
+                    try {
+                        const options = {
+                            method: "GET",
+                            uri: `${baseUrl}/api/v0/videos/models`,
+                            json: true,
+                        };
+                        const models = await this.helpers.request(options);
+                        if (!models || !Array.isArray(models) || models.length === 0) {
+                            return [
+                                {
+                                    name: "Google Veo 3 (default)",
+                                    value: "fal-ai/veo3",
+                                    description: "Default video model",
+                                },
+                            ];
+                        }
+                        return models.map((model) => {
+                            const tags = model.tags && model.tags.length > 0 ? ` (${model.tags.join(", ")})` : "";
+                            const maxDuration = model.max_duration ? ` - Max ${model.max_duration}s` : "";
+                            const credits = model.cost_credits ? ` - ${model.cost_credits} credits` : "";
+                            return {
+                                name: `${model.name}${tags}${maxDuration}`,
+                                value: model.id,
+                                description: model.description || `${credits}`,
+                            };
+                        });
+                    }
+                    catch (error) {
+                        console.error("Error loading video models:", error);
+                        return [
+                            {
+                                name: "Google Veo 3 (default)",
+                                value: "fal-ai/veo3",
+                                description: "Using default - API connection error",
+                            },
+                        ];
+                    }
+                },
                 async getBrowserIntegrations() {
                     const credentials = await this.getCredentials("parallelAiApi");
                     const baseUrl = credentials.baseUrl;
@@ -2379,14 +2834,33 @@ class ParallelAi {
                     prompt,
                     model,
                 };
-                if (model === "dall-e-3") {
+                const referenceImageIds = this.getNodeParameter("referenceImageIds", 0, "");
+                const referenceImageUrls = this.getNodeParameter("referenceImageUrls", 0, "");
+                const referenceImages = [];
+                if (referenceImageIds && referenceImageIds.trim()) {
+                    const ids = referenceImageIds.split(",").map(id => id.trim()).filter(id => id);
+                    referenceImages.push(...ids);
+                }
+                if (referenceImageUrls && referenceImageUrls.trim()) {
+                    const urls = referenceImageUrls.split(",").map(url => url.trim()).filter(url => url);
+                    referenceImages.push(...urls.map(url => ({ url })));
+                }
+                if (referenceImages.length > 0) {
+                    body.referenceImages = referenceImages;
+                }
+                if (model === "gpt-image-1") {
+                    body.size = this.getNodeParameter("imageSize", 0);
+                    body.quality = this.getNodeParameter("imageQuality", 0);
+                    body.style = this.getNodeParameter("imageStyle", 0);
+                }
+                else if (model === "dall-e-3") {
                     body.size = this.getNodeParameter("imageSize", 0);
                     body.quality = this.getNodeParameter("imageQuality", 0);
                     body.style = this.getNodeParameter("imageStyle", 0);
                 }
                 else {
-                    body.width = this.getNodeParameter("imageWidth", 0);
-                    body.height = this.getNodeParameter("imageHeight", 0);
+                    body.width = this.getNodeParameter("imageWidth", 0, 512);
+                    body.height = this.getNodeParameter("imageHeight", 0, 512);
                 }
                 const options = {
                     headers: {
@@ -2407,6 +2881,82 @@ class ParallelAi {
                     },
                     method: "GET",
                     uri: `${baseUrl}/api/v0/images/models`,
+                    json: true,
+                };
+                responseData = await this.helpers.request(options);
+            }
+        }
+        else if (resource === "video") {
+            if (operation === "generate") {
+                const prompt = this.getNodeParameter("videoPrompt", 0);
+                const model = this.getNodeParameter("videoModel", 0);
+                const duration = this.getNodeParameter("videoDuration", 0, 5);
+                const resolution = this.getNodeParameter("videoResolution", 0, "1080p");
+                const body = {
+                    prompt,
+                    model,
+                    duration,
+                    resolution,
+                };
+                const aspectRatio = this.getNodeParameter("videoAspectRatio", 0, "");
+                if (aspectRatio) {
+                    body.aspect_ratio = aspectRatio;
+                }
+                const firstFrameUrl = this.getNodeParameter("firstFrameUrl", 0, "");
+                const firstFrameId = this.getNodeParameter("firstFrameId", 0, "");
+                const lastFrameUrl = this.getNodeParameter("lastFrameUrl", 0, "");
+                const lastFrameId = this.getNodeParameter("lastFrameId", 0, "");
+                if (firstFrameUrl)
+                    body.first_frame_url = firstFrameUrl;
+                if (firstFrameId)
+                    body.first_frame_id = firstFrameId;
+                if (lastFrameUrl)
+                    body.last_frame_url = lastFrameUrl;
+                if (lastFrameId)
+                    body.last_frame_id = lastFrameId;
+                const imageUrl = this.getNodeParameter("imageUrl", 0, "");
+                const imageId = this.getNodeParameter("imageId", 0, "");
+                if (imageUrl)
+                    body.image_url = imageUrl;
+                if (imageId)
+                    body.image_id = imageId;
+                const motionIntensity = this.getNodeParameter("motionIntensity", 0, "");
+                const cameraMotion = this.getNodeParameter("cameraMotion", 0, "");
+                const videoStyle = this.getNodeParameter("videoStyle", 0, "");
+                if (motionIntensity)
+                    body.motion_intensity = motionIntensity;
+                if (cameraMotion)
+                    body.camera_motion = cameraMotion;
+                if (videoStyle)
+                    body.style = videoStyle;
+                const options = {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-API-KEY": apiKey,
+                    },
+                    method: "POST",
+                    uri: `${baseUrl}/api/v0/videos/generate`,
+                    body,
+                    json: true,
+                };
+                responseData = await this.helpers.request(options);
+            }
+            else if (operation === "getModels") {
+                const options = {
+                    method: "GET",
+                    uri: `${baseUrl}/api/v0/videos/models`,
+                    json: true,
+                };
+                responseData = await this.helpers.request(options);
+            }
+            else if (operation === "getStatus") {
+                const videoId = this.getNodeParameter("videoId", 0);
+                const options = {
+                    headers: {
+                        "X-API-KEY": apiKey,
+                    },
+                    method: "GET",
+                    uri: `${baseUrl}/api/v0/videos/${videoId}/status`,
                     json: true,
                 };
                 responseData = await this.helpers.request(options);

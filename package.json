@@ -1,6 +1,6 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "n8n nodes for Parallel AI",
   "main": "index.ts",
   "types": "dist/index.d.ts",
