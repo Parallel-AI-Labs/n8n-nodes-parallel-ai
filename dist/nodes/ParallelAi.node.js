@@ -2314,16 +2314,54 @@ class ParallelAi {
                     message,
                     settings: contextSettings,
                 };
-                const options = {
+                const startOptions = {
                     headers: {
                         "X-API-KEY": apiKey,
                     },
                     method: "POST",
-                    uri: `${baseUrl}/api/v0/employees/chat`,
+                    uri: `${baseUrl}/api/v0/employees/chat/async`,
                     body,
                     json: true,
                 };
-                responseData = await this.helpers.request(options);
+                const startResponse = await this.helpers.request(startOptions);
+                const chatId = startResponse.chatId;
+                if (!chatId) {
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), "Failed to start async chat: no chatId returned");
+                }
+                const maxAttempts = 60;
+                const pollInterval = 2000;
+                let attempt = 0;
+                let completed = false;
+                while (attempt < maxAttempts && !completed) {
+                    if (attempt > 0) {
+                        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+                    }
+                    const pollOptions = {
+                        headers: {
+                            "X-API-KEY": apiKey,
+                        },
+                        method: "GET",
+                        uri: `${baseUrl}/api/v0/employees/chat/async/${chatId}`,
+                        json: true,
+                    };
+                    const pollResponse = await this.helpers.request(pollOptions);
+                    if (pollResponse.status === "completed") {
+                        responseData = {
+                            response: pollResponse.response,
+                            fullText: pollResponse.fullText,
+                            context: pollResponse.context,
+                            chatId: chatId,
+                        };
+                        completed = true;
+                    }
+                    else if (pollResponse.status === "error") {
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), `Chat failed: ${pollResponse.error}`);
+                    }
+                    attempt++;
+                }
+                if (!completed) {
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), `Chat request timed out after ${(maxAttempts * pollInterval) / 1000} seconds. ChatId: ${chatId}`);
+                }
             }
         }
         else if (resource === "list") {

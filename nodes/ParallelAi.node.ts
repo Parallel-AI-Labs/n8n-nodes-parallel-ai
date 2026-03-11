@@ -2439,17 +2439,75 @@ export class ParallelAi implements INodeType {
           settings: contextSettings,
         };
 
-        const options = {
+        // Use async endpoint to start the chat
+        const startOptions = {
           headers: {
             "X-API-KEY": apiKey,
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/employees/chat`,
+          uri: `${baseUrl}/api/v0/employees/chat/async`,
           body,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        const startResponse = await this.helpers.request!(startOptions);
+        const chatId = startResponse.chatId;
+
+        if (!chatId) {
+          throw new NodeOperationError(
+            this.getNode(),
+            "Failed to start async chat: no chatId returned"
+          );
+        }
+
+        // Poll for completion with exponential backoff
+        const maxAttempts = 60; // Max 2 minutes with 2s intervals
+        const pollInterval = 2000; // 2 seconds
+        let attempt = 0;
+        let completed = false;
+
+        while (attempt < maxAttempts && !completed) {
+          // Wait before polling (skip first iteration)
+          if (attempt > 0) {
+            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+          }
+
+          const pollOptions = {
+            headers: {
+              "X-API-KEY": apiKey,
+            },
+            method: "GET" as "GET",
+            uri: `${baseUrl}/api/v0/employees/chat/async/${chatId}`,
+            json: true,
+          };
+
+          const pollResponse = await this.helpers.request!(pollOptions);
+
+          if (pollResponse.status === "completed") {
+            responseData = {
+              response: pollResponse.response,
+              fullText: pollResponse.fullText,
+              context: pollResponse.context,
+              chatId: chatId,
+            };
+            completed = true;
+          } else if (pollResponse.status === "error") {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Chat failed: ${pollResponse.error}`
+            );
+          }
+          // Otherwise status is 'processing', continue polling
+
+          attempt++;
+        }
+
+        if (!completed) {
+          throw new NodeOperationError(
+            this.getNode(),
+            `Chat request timed out after ${(maxAttempts * pollInterval) / 1000} seconds. ChatId: ${chatId}`
+          );
+        }
       }
     }
 
