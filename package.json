@@ -1,9 +1,10 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "n8n nodes for Parallel AI",
   "author": {
     "name": "Parallel AI",
+    "email": "support@parallellabs.app",
     "url": "https://parallellabs.app"
   },
   "repository": {
