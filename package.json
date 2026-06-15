@@ -1,9 +1,11 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.3.18",
+  "version": "0.4.0",
   "description": "n8n nodes for Parallel AI",
-  "main": "index.ts",
-  "types": "dist/index.d.ts",
+  "author": {
+    "name": "Parallel AI",
+    "url": "https://parallellabs.app"
+  },
   "keywords": [
     "n8n-nodes",
     "n8n-custom-nodes",
@@ -17,17 +19,12 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "main/credentials/ParallelAiApi.credentials.js"
+      "dist/credentials/ParallelAiApi.credentials.js"
     ],
     "nodes": [
-      "main/nodes/ParallelAi.node.js",
-      "main/nodes/ParallelAiChatModel.node.js",
-      "main/nodes/KnowledgeBaseRetriever.node.js",
-      "main/nodes/BrowserTask.node.js",
-      "main/nodes/MeetQuickAvailability.node.js",
-      "main/nodes/MeetQuickBooking.node.js",
-      "main/nodes/MeetQuickAvailabilityTool.node.js",
-      "main/nodes/MeetQuickBookingTool.node.js"
+      "dist/nodes/ParallelAi/ParallelAi.node.js",
+      "dist/nodes/KnowledgeBaseRetriever/ParallelAiKnowledgeBaseRetriever.node.js",
+      "dist/nodes/BrowserTask/ParallelAiBrowserTask.node.js"
     ]
   },
   "publishConfig": {

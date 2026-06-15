@@ -10,19 +10,40 @@ import {
   NodeOperationError,
 } from "n8n-workflow";
 
-// Response interface for browser task API
-interface IBrowserTaskResponse extends IDataObject {
-  success: boolean;
-  result: string;
-  history: string[];
-  creditsCharged: number;
+// Response interface for browser task submit API
+interface IBrowserTaskSubmitResponse extends IDataObject {
+  taskId: string;
+  status: string;
+  message: string;
+}
+
+// Response interface for browser task status API
+interface IBrowserTaskStatusResponse extends IDataObject {
+  taskId: string;
+  status: string;
+  progressMessage?: string;
+  createdDate?: string;
+  startedDate?: string;
+  completedDate?: string;
+  result?: {
+    success: boolean;
+    result: string;
+    history: string[];
+    creditsCharged: number;
+  };
+  errorMessage?: string;
+}
+
+// Helper function to wait
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export class BrowserTask implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Parallel AI: Browser Task",
     name: "parallelAiBrowserTask",
-    icon: "file:logo.png",
+    icon: "file:icon.svg",
     group: ["transform"],
     version: 1,
     description:
@@ -78,13 +99,13 @@ export class BrowserTask implements INodeType {
         description: "Type of browser session to use",
       },
       {
-        displayName: "Browser Integration",
+        displayName: "Browser Integration Name or ID",
         name: "integrationId",
         type: "options",
         default: "",
         required: true,
         description:
-          "Browser integration to use for authenticated sessions (LinkedIn, Twitter, etc.)",
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
         displayOptions: {
           show: {
             sessionType: ["authenticated"],
@@ -116,7 +137,23 @@ export class BrowserTask implements INodeType {
         type: "boolean",
         default: false,
         description:
-          "Enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
+          "Whether to enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
+      },
+      {
+        displayName: "Timeout (Seconds)",
+        name: "timeout",
+        type: "number",
+        default: 600,
+        description:
+          "Maximum time to wait for the browser task to complete (default 600 seconds / 10 minutes)",
+      },
+      {
+        displayName: "Poll Interval (Seconds)",
+        name: "pollInterval",
+        type: "number",
+        default: 5,
+        description:
+          "How often to check the task status (default 5 seconds)",
       },
     ],
   };
@@ -147,7 +184,7 @@ export class BrowserTask implements INodeType {
           if (!integrations.length) {
             return [
               {
-                name: "No browser integrations found",
+                name: "No Browser Integrations Found",
                 value: "",
                 description: "Create a browser integration first",
               },
@@ -163,7 +200,7 @@ export class BrowserTask implements INodeType {
           console.error("Error loading browser integrations:", error);
           return [
             {
-              name: "Error loading browser integrations",
+              name: "Error Loading Browser Integrations",
               value: "",
               description: "Please check API connection",
             },
@@ -182,6 +219,8 @@ export class BrowserTask implements INodeType {
     const task = this.getNodeParameter("task", 0) as string;
     const sessionType = this.getNodeParameter("sessionType", 0) as string;
     const useVision = this.getNodeParameter("useVision", 0) as boolean;
+    const timeout = this.getNodeParameter("timeout", 0, 600) as number;
+    const pollInterval = this.getNodeParameter("pollInterval", 0, 5) as number;
 
     // Get integration ID for authenticated sessions
     let integrationId: string | undefined = undefined;
@@ -233,21 +272,9 @@ export class BrowserTask implements INodeType {
       requestBody.zipcode = zipcode;
     }
 
-    // Define the API request options
-    const options = {
-      headers: {
-        "X-API-KEY": apiKey,
-        "Content-Type": "application/json",
-      },
-      method: "POST" as "POST",
-      uri: `${baseUrl}/api/v0/browser-task`,
-      body: requestBody,
-      json: true,
-    };
-
     // Log the request details for debugging
     console.log(
-      `Executing browser task: "${effectiveTask.substring(0, 50)}${
+      `Submitting browser task: "${effectiveTask.substring(0, 50)}${
         effectiveTask.length > 50 ? "..." : ""
       }"`
     );
@@ -261,41 +288,107 @@ export class BrowserTask implements INodeType {
     }
 
     try {
-      const responseData =
-        (await this.helpers.request!(options)) as IBrowserTaskResponse;
-
-      // Check if the task was successful
-      if (!responseData.success) {
-        throw new NodeOperationError(
-          this.getNode(),
-          `Browser task failed: ${responseData.result || "Unknown error"}`
-        );
-      }
-
-      // Format output for n8n
-      const output: IDataObject = {
-        success: responseData.success,
-        result: responseData.result,
-        history: responseData.history || [],
-        creditsCharged: responseData.creditsCharged,
-        task: effectiveTask,
-        sessionType,
-        useVision,
+      // Step 1: Submit the browser task
+      const submitOptions = {
+        headers: {
+          "X-API-KEY": apiKey,
+          "Content-Type": "application/json",
+        },
+        method: "POST" as "POST",
+        uri: `${baseUrl}/api/v0/browser-task`,
+        body: requestBody,
+        json: true,
       };
 
-      if (integrationId) {
-        output.integrationId = integrationId;
+      const submitResponse =
+        (await this.helpers.request!(submitOptions)) as IBrowserTaskSubmitResponse;
+
+      const taskId = submitResponse.taskId;
+      console.log(`Browser task submitted with ID: ${taskId}`);
+
+      // Step 2: Poll for completion
+      const startTime = Date.now();
+      const timeoutMs = timeout * 1000;
+      const pollIntervalMs = pollInterval * 1000;
+
+      while (Date.now() - startTime < timeoutMs) {
+        // Wait before polling
+        await sleep(pollIntervalMs);
+
+        // Check task status
+        const statusOptions = {
+          headers: {
+            "X-API-KEY": apiKey,
+            "Content-Type": "application/json",
+          },
+          method: "GET" as "GET",
+          uri: `${baseUrl}/api/v0/browser-task/${taskId}`,
+          json: true,
+        };
+
+        const statusResponse =
+          (await this.helpers.request!(statusOptions)) as IBrowserTaskStatusResponse;
+
+        console.log(`Task ${taskId} status: ${statusResponse.status} - ${statusResponse.progressMessage || ''}`);
+
+        if (statusResponse.status === "completed") {
+          // Task completed successfully
+          const result = statusResponse.result;
+
+          if (!result || !result.success) {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Browser task failed: ${result?.result || "Unknown error"}`
+            );
+          }
+
+          // Format output for n8n
+          const output: IDataObject = {
+            success: result.success,
+            result: result.result,
+            history: result.history || [],
+            creditsCharged: result.creditsCharged,
+            task: effectiveTask,
+            sessionType,
+            useVision,
+            taskId,
+          };
+
+          if (integrationId) {
+            output.integrationId = integrationId;
+          }
+
+          if (zipcode) {
+            output.zipcode = zipcode;
+          }
+
+          console.log(
+            `Browser task completed successfully. Credits charged: ${result.creditsCharged}`
+          );
+
+          return [this.helpers.returnJsonArray(output)];
+        } else if (statusResponse.status === "failed") {
+          // Task failed
+          throw new NodeOperationError(
+            this.getNode(),
+            `Browser task failed: ${statusResponse.errorMessage || "Unknown error"}`
+          );
+        } else if (statusResponse.status === "cancelled") {
+          // Task was cancelled
+          throw new NodeOperationError(
+            this.getNode(),
+            "Browser task was cancelled"
+          );
+        }
+
+        // Status is still pending or running, continue polling
       }
 
-      if (zipcode) {
-        output.zipcode = zipcode;
-      }
-
-      console.log(
-        `Browser task completed successfully. Credits charged: ${responseData.creditsCharged}`
+      // Timeout reached
+      throw new NodeOperationError(
+        this.getNode(),
+        `Browser task timed out after ${timeout} seconds. Task ID: ${taskId}. You can check the status manually via the API.`
       );
-
-      return [this.helpers.returnJsonArray(output)];
     } catch (error) {
       if (this.continueOnFail()) {
         const executionErrorData = this.helpers.constructExecutionMetaData(

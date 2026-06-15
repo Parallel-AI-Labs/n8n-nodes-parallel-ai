@@ -52,6 +52,13 @@ module.exports = {
         "n8n-nodes-base/node-resource-description-filename-against-convention":
           "off",
         "n8n-nodes-base/node-param-fixed-collection-type-unsorted-items": "off",
+        // Keep `NodeConnectionType.Main` enums for inputs/outputs rather than
+        // the rule-suggested `['main']` string literals: the enum is the
+        // type-correct form for the installed n8n-workflow version, and the
+        // string form fails the TypeScript build.
+        "n8n-nodes-base/node-class-description-inputs-wrong-regular-node":
+          "off",
+        "n8n-nodes-base/node-class-description-outputs-wrong": "off",
       },
     },
   ],

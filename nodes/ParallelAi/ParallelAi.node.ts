@@ -14,7 +14,7 @@ export class ParallelAi implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Parallel AI",
     name: "parallelAi",
-    icon: "file:logo.png",
+    icon: "file:icon.svg",
     group: ["transform"],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -41,28 +41,24 @@ export class ParallelAi implements INodeType {
         noDataExpression: true,
         options: [
           {
+            name: "Document",
+            value: "document",
+          },
+          {
             name: "Employee",
             value: "employee",
+          },
+          {
+            name: "Folder",
+            value: "folder",
           },
           {
             name: "Image",
             value: "image",
           },
           {
-            name: "Video",
-            value: "video",
-          },
-          {
             name: "List",
             value: "list",
-          },
-          {
-            name: "Document",
-            value: "document",
-          },
-          {
-            name: "Folder",
-            value: "folder",
           },
           {
             name: "Sequence",
@@ -71,6 +67,10 @@ export class ParallelAi implements INodeType {
           {
             name: "System",
             value: "system",
+          },
+          {
+            name: "Video",
+            value: "video",
           },
         ],
         default: "employee",
@@ -96,10 +96,10 @@ export class ParallelAi implements INodeType {
             description: "Send a message to an employee and get a response",
           },
           {
-            name: "Get All",
+            name: "Get Many",
             value: "getAll",
-            action: "Get all employees",
-            description: "Retrieve a list of all employees",
+            action: "Get many employees",
+            description: "Retrieve a list of many employees",
           },
         ],
         default: "chat",
@@ -142,10 +142,10 @@ export class ParallelAi implements INodeType {
             description: "Get a specific list by ID",
           },
           {
-            name: "Get All",
+            name: "Get Many",
             value: "getAll",
-            action: "Get all lists",
-            description: "Get all available lists",
+            action: "Get many lists",
+            description: "Get many available lists",
           },
           {
             name: "Update Rows",
@@ -188,10 +188,10 @@ export class ParallelAi implements INodeType {
             description: "Get a document by ID",
           },
           {
-            name: "Get All",
+            name: "Get Many",
             value: "getAll",
-            action: "Get all documents",
-            description: "Get all documents in a specific path",
+            action: "Get many documents",
+            description: "Get many documents in a specific path",
           },
           {
             name: "Move",
@@ -200,16 +200,16 @@ export class ParallelAi implements INodeType {
             description: "Move a document to a different folder",
           },
           {
-            name: "Update",
-            value: "update",
-            action: "Update a document",
-            description: "Update an existing document",
-          },
-          {
             name: "Search",
             value: "search",
             action: "Search documents",
             description: "Search for documents matching a text query",
+          },
+          {
+            name: "Update",
+            value: "update",
+            action: "Update a document",
+            description: "Update an existing document",
           },
         ],
         default: "getAll",
@@ -240,10 +240,10 @@ export class ParallelAi implements INodeType {
             description: "Delete a folder",
           },
           {
-            name: "Get All",
+            name: "Get Many",
             value: "getAll",
-            action: "Get all folders",
-            description: "Get all folders",
+            action: "Get many folders",
+            description: "Get many folders",
           },
         ],
         default: "getAll",
@@ -268,10 +268,10 @@ export class ParallelAi implements INodeType {
             description: "Add a new member to a sequence",
           },
           {
-            name: "Get All",
+            name: "Get Many",
             value: "getAll",
-            action: "Get all sequences",
-            description: "Get all available sequences",
+            action: "Get many sequences",
+            description: "Get many available sequences",
           },
           {
             name: "Get Members",
@@ -387,7 +387,7 @@ export class ParallelAi implements INodeType {
 
       // EMPLOYEE CHAT PARAMETERS
       {
-        displayName: "Employee",
+        displayName: "Employee Name or ID",
         name: "employeeId",
         type: "options",
         typeOptions: {
@@ -395,7 +395,8 @@ export class ParallelAi implements INodeType {
         },
         required: true,
         default: "",
-        description: "Employee to chat with",
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -421,14 +422,15 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Model",
+        displayName: "Model Name or ID",
         name: "model",
         type: "options",
         typeOptions: {
           loadOptionsMethod: "getModels",
         },
-        default: "gpt-4.1-nano-2025-04-14",
-        description: "AI model to use for the conversation",
+        default: "",
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -453,7 +455,7 @@ export class ParallelAi implements INodeType {
         name: "documents",
         type: "boolean",
         default: true,
-        description: "Access company knowledge base for information",
+        description: "Whether to access company knowledge base for information",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -466,7 +468,7 @@ export class ParallelAi implements INodeType {
         name: "searchEngine",
         type: "boolean",
         default: false,
-        description: "Allow searching the web for information",
+        description: "Whether to allow searching the web for information",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -479,7 +481,7 @@ export class ParallelAi implements INodeType {
         name: "websites",
         type: "boolean",
         default: false,
-        description: "Allow accessing and reading websites",
+        description: "Whether to allow accessing and reading websites",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -492,7 +494,7 @@ export class ParallelAi implements INodeType {
         name: "news",
         type: "boolean",
         default: false,
-        description: "Allow searching news for recent information",
+        description: "Whether to allow searching news for recent information",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -517,7 +519,7 @@ export class ParallelAi implements INodeType {
         name: "shortTermMemories",
         type: "boolean",
         default: true,
-        description: "Recall information from the current conversation",
+        description: "Whether to recall information from the current conversation",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -530,7 +532,7 @@ export class ParallelAi implements INodeType {
         name: "longTermMemories",
         type: "boolean",
         default: false,
-        description: "Access information from past conversations",
+        description: "Whether to access information from past conversations",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -548,7 +550,7 @@ export class ParallelAi implements INodeType {
             value: "chat",
           },
           {
-            name: "Company-wide",
+            name: "Company-Wide",
             value: "company",
           },
         ],
@@ -579,7 +581,7 @@ export class ParallelAi implements INodeType {
         name: "company",
         type: "boolean",
         default: true,
-        description: "Include company information in responses",
+        description: "Whether to include company information in responses",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -592,7 +594,7 @@ export class ParallelAi implements INodeType {
         name: "employee",
         type: "boolean",
         default: true,
-        description: "Maintain the employee's persona in responses",
+        description: "Whether to maintain the employee's persona in responses",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -617,7 +619,7 @@ export class ParallelAi implements INodeType {
         name: "lists",
         type: "boolean",
         default: false,
-        description: "AI can create, manage, and update Smart Lists on the platform",
+        description: "Whether the AI can create, manage, and update Smart Lists on the platform",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -630,7 +632,7 @@ export class ParallelAi implements INodeType {
         name: "researchTask",
         type: "boolean",
         default: false,
-        description: "AI can delegate complex research tasks to a specialized research agent for comprehensive, real-time information gathering",
+        description: "Whether the AI can delegate complex research tasks to a specialized research agent for comprehensive, real-time information gathering",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -643,7 +645,7 @@ export class ParallelAi implements INodeType {
         name: "documentCreation",
         type: "boolean",
         default: false,
-        description: "AI can generate PDF, DOCX, or CSV files and email them to you",
+        description: "Whether the AI can generate PDF, DOCX, or CSV files and email them to you",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -656,7 +658,7 @@ export class ParallelAi implements INodeType {
         name: "browserTaskEnabled",
         type: "boolean",
         default: false,
-        description: "Allow the AI to control a web browser for automation tasks",
+        description: "Whether to allow the AI to control a web browser for automation tasks",
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -696,12 +698,13 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Browser Integration",
+        displayName: "Browser Integration Name or ID",
         name: "browserIntegrationId",
         type: "options",
         default: "",
         required: true,
-        description: "Browser integration to use for authenticated sessions (LinkedIn, Twitter, etc.)",
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
         displayOptions: {
           show: {
             resource: ["employee"],
@@ -1003,7 +1006,7 @@ export class ParallelAi implements INodeType {
         default: "[]",
         required: true,
         description: "JSON array of objects containing the row data to update",
-        placeholder: '[\n  {\n    "id": "row-id-1",\n    "columnName1": "value1",\n    "columnName2": "value2"\n  },\n  {\n    "email": "example@domain.com",\n    "name": "John Doe",\n    "status": "Active"\n  }\n]',
+        placeholder: '[\n  {\n    "ID": "row-ID-1",\n    "columnName1": "value1",\n    "columnName2": "value2"\n  },\n  {\n    "email": "example@domain.com",\n    "name": "John Doe",\n    "status": "Active"\n  }\n]',
         displayOptions: {
           show: {
             resource: ["list"],
@@ -1460,6 +1463,7 @@ export class ParallelAi implements INodeType {
         type: "string",
         default: "",
         required: true,
+        placeholder: "name@email.com",
         description: "Email address of the member",
         displayOptions: {
           show: {
@@ -1560,14 +1564,15 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Model",
+        displayName: "Model Name or ID",
         name: "imageModel",
         type: "options",
         typeOptions: {
           loadOptionsMethod: "getImageModels",
         },
-        default: "gpt-image-1",
-        description: "AI model to use for image generation",
+        default: "",
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
         displayOptions: {
           show: {
             resource: ["image"],
@@ -1592,7 +1597,7 @@ export class ParallelAi implements INodeType {
         name: "referenceImageIds",
         type: "string",
         default: "",
-        placeholder: "image-id-1,image-id-2",
+        placeholder: "image-ID-1,image-ID-2",
         description: "Comma-separated list of image IDs to use as reference (for models that support image references)",
         displayOptions: {
           show: {
@@ -1619,8 +1624,8 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "DALL-E Options",
-        name: "dalleOptionsSection",
+        displayName: "GPT Image Options",
+        name: "gptImageOptionsSection",
         type: "notice",
         default: "",
         displayOptions: {
@@ -1802,14 +1807,15 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Model",
+        displayName: "Model Name or ID",
         name: "videoModel",
         type: "options",
         typeOptions: {
           loadOptionsMethod: "getVideoModels",
         },
-        default: "fal-ai/veo3",
-        description: "AI model to use for video generation",
+        default: "",
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
         displayOptions: {
           show: {
             resource: ["video"],
@@ -1818,7 +1824,7 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Duration (seconds)",
+        displayName: "Duration (Seconds)",
         name: "videoDuration",
         type: "number",
         default: 5,
@@ -1892,7 +1898,7 @@ export class ParallelAi implements INodeType {
         name: "firstFrameId",
         type: "string",
         default: "",
-        placeholder: "image-id-123",
+        placeholder: "image-ID-123",
         description: "ID of the first frame image from your library",
         displayOptions: {
           show: {
@@ -1920,7 +1926,7 @@ export class ParallelAi implements INodeType {
         name: "lastFrameId",
         type: "string",
         default: "",
-        placeholder: "image-id-456",
+        placeholder: "image-ID-456",
         description: "ID of the last frame image from your library",
         displayOptions: {
           show: {
@@ -1960,7 +1966,7 @@ export class ParallelAi implements INodeType {
         name: "imageId",
         type: "string",
         default: "",
-        placeholder: "image-id-789",
+        placeholder: "image-ID-789",
         description: "ID of the source image from your library to animate",
         displayOptions: {
           show: {
@@ -2130,7 +2136,7 @@ export class ParallelAi implements INodeType {
           if (!models || !Array.isArray(models) || models.length === 0) {
             return [
               {
-                name: "GPT Image 1 (default)",
+                name: "GPT Image 1 (Default)",
                 value: "gpt-image-1",
                 description: "Default image model",
               },
@@ -2146,7 +2152,7 @@ export class ParallelAi implements INodeType {
           console.error("Error loading image models:", error);
           return [
             {
-              name: "GPT Image 1 (default)",
+              name: "GPT Image 1 (Default)",
               value: "gpt-image-1",
               description: "Using default - API connection error",
             },
@@ -2170,7 +2176,7 @@ export class ParallelAi implements INodeType {
           if (!models || !Array.isArray(models) || models.length === 0) {
             return [
               {
-                name: "Google Veo 3 (default)",
+                name: "Google Veo 3 (Default)",
                 value: "fal-ai/veo3",
                 description: "Default video model",
               },
@@ -2192,7 +2198,7 @@ export class ParallelAi implements INodeType {
           console.error("Error loading video models:", error);
           return [
             {
-              name: "Google Veo 3 (default)",
+              name: "Google Veo 3 (Default)",
               value: "fal-ai/veo3",
               description: "Using default - API connection error",
             },
@@ -2221,7 +2227,7 @@ export class ParallelAi implements INodeType {
           if (!integrations.length) {
             return [
               {
-                name: "No browser integrations found",
+                name: "No Browser Integrations Found",
                 value: "",
                 description: "Create a browser integration first",
               },
@@ -2237,7 +2243,7 @@ export class ParallelAi implements INodeType {
           console.error("Error loading browser integrations:", error);
           return [
             {
-              name: "Error loading browser integrations",
+              name: "Error Loading Browser Integrations",
               value: "",
               description: "Please check API connection",
             },
@@ -2266,7 +2272,7 @@ export class ParallelAi implements INodeType {
           const employees = responseData.employees || [];
 
           if (!employees.length) {
-            return [{ name: "No employees found", value: "" }];
+            return [{ name: "No Employees Found", value: "" }];
           }
 
           // Format employees for the dropdown
@@ -2281,7 +2287,7 @@ export class ParallelAi implements INodeType {
           console.error("Error loading employees:", error);
           return [
             {
-              name: "Error loading employees",
+              name: "Error Loading Employees",
               value: "",
               description: "Please check API connection",
             },
@@ -2319,7 +2325,7 @@ export class ParallelAi implements INodeType {
           console.error("Error loading models:", error);
           return [
             {
-              name: "Error loading models",
+              name: "Error Loading Models",
               value: "gpt-4",
               description: "Using default",
             },
@@ -2617,7 +2623,7 @@ export class ParallelAi implements INodeType {
             rowData = [rowData];
           }
         } catch (error) {
-          throw new Error(`Invalid JSON format for rowData: ${error}`);
+          throw new NodeOperationError(this.getNode(), `Invalid JSON format for rowData: ${error}`);
         }
 
         // Process each row
@@ -2670,7 +2676,7 @@ export class ParallelAi implements INodeType {
             rowData = [rowData];
           }
         } catch (error) {
-          throw new Error(`Invalid JSON format for rowData: ${error}`);
+          throw new NodeOperationError(this.getNode(), `Invalid JSON format for rowData: ${error}`);
         }
 
         // Process each row
@@ -2746,7 +2752,7 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/documents/${documentId}`,
+          uri: `${baseUrl}/api/v0/documents/${documentId}/details`,
           json: true,
         };
 
@@ -2764,7 +2770,7 @@ export class ParallelAi implements INodeType {
           };
 
           const contentData = await this.helpers.request!(contentOptions);
-          
+
           // Merge document metadata with content
           documentData.content = contentData.content;
         }
@@ -2789,7 +2795,7 @@ export class ParallelAi implements INodeType {
               "Content-Type": "application/json",
             },
             method: "POST" as "POST",
-            uri: `${baseUrl}/api/v0/documents`,
+            uri: `${baseUrl}/api/v0/documents/create`,
             body: {
               name,
               content,
@@ -2803,13 +2809,13 @@ export class ParallelAi implements INodeType {
         } else {
           // Upload file as document
           const filePath = this.getNodeParameter("filePath", 0) as string;
-          
+
           const options = {
             headers: {
               "X-API-KEY": apiKey,
             },
             method: "POST" as "POST",
-            uri: `${baseUrl}/api/v0/documents`,
+            uri: `${baseUrl}/api/v0/documents/create`,
             formData: {
               file: {
                 value: createReadStream(filePath),
@@ -2832,14 +2838,14 @@ export class ParallelAi implements INodeType {
         const name = this.getNodeParameter("name", 0, "") as string;
         const content = this.getNodeParameter("content", 0) as string;
         const tagsString = this.getNodeParameter("tags", 0, "") as string;
-        
+
         // Only include tags if provided
         const body: { content: string; name?: string; tags?: string[] } = { content };
-        
+
         if (name) {
           body.name = name;
         }
-        
+
         if (tagsString) {
           body.tags = tagsString.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
         }
@@ -2850,7 +2856,7 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "PUT" as "PUT",
-          uri: `${baseUrl}/api/v0/documents/${documentId}`,
+          uri: `${baseUrl}/api/v0/documents/${documentId}/update`,
           body,
           json: true,
         };
@@ -3054,7 +3060,7 @@ export class ParallelAi implements INodeType {
             userData = userDataStr;
           }
         } catch (error) {
-          throw new Error(`Invalid JSON format for userData: ${error}`);
+          throw new NodeOperationError(this.getNode(), `Invalid JSON format for userData: ${error}`);
         }
 
         const options = {
@@ -3152,12 +3158,8 @@ export class ParallelAi implements INodeType {
           body.size = this.getNodeParameter("imageSize", 0) as string;
           body.quality = this.getNodeParameter("imageQuality", 0) as string;
           body.style = this.getNodeParameter("imageStyle", 0) as string;
-        } else if (model === "dall-e-3") {
-          body.size = this.getNodeParameter("imageSize", 0) as string;
-          body.quality = this.getNodeParameter("imageQuality", 0) as string;
-          body.style = this.getNodeParameter("imageStyle", 0) as string;
         } else {
-          // Leonardo and other models use width/height
+          // Leonardo, Google, and other models use width/height
           body.width = this.getNodeParameter("imageWidth", 0, 512) as number;
           body.height = this.getNodeParameter("imageHeight", 0, 512) as number;
         }

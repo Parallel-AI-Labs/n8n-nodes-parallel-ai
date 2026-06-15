@@ -28,7 +28,7 @@ export class KnowledgeBaseRetriever implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Parallel AI: Knowledge Base Retriever",
     name: "parallelAiKnowledgeBaseRetriever",
-    icon: "file:logo.png",
+    icon: "file:icon.svg",
     group: ["transform"],
     version: 1,
     description:

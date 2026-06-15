@@ -17,7 +17,8 @@ backend-flask/.idea/
 
 **/.claude/settings.local.json
 
-n8n-nodes-parallel-ai/dist/**
+dist/
+*.tsbuildinfo
 
 # macOS
 .DS_Store
