@@ -6,6 +6,14 @@
     "name": "Parallel AI",
     "url": "https://parallellabs.app"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Parallel-AI-Labs/n8n-nodes-parallel-ai.git"
+  },
+  "homepage": "https://github.com/Parallel-AI-Labs/n8n-nodes-parallel-ai#readme",
+  "bugs": {
+    "url": "https://github.com/Parallel-AI-Labs/n8n-nodes-parallel-ai/issues"
+  },
   "keywords": [
     "n8n-nodes",
     "n8n-custom-nodes",
