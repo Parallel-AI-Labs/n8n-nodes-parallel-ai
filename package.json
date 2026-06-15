@@ -1,6 +1,6 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "n8n nodes for Parallel AI",
   "author": {
     "name": "Parallel AI",
