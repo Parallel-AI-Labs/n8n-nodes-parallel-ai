@@ -1,6 +1,6 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "n8n nodes for Parallel AI",
   "author": {
     "name": "Parallel AI",
@@ -32,6 +32,7 @@
     ],
     "nodes": [
       "dist/nodes/ParallelAi/ParallelAi.node.js",
+      "dist/nodes/ParallelAiApi/ParallelAiApi.node.js",
       "dist/nodes/KnowledgeBaseRetriever/ParallelAiKnowledgeBaseRetriever.node.js",
       "dist/nodes/BrowserTask/ParallelAiBrowserTask.node.js"
     ]
@@ -47,6 +48,9 @@
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
     "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
   },
   "devDependencies": {
     "@types/express": "^4.17.6",

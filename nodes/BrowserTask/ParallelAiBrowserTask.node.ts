@@ -8,6 +8,7 @@ import {
   INodeTypeDescription,
   NodeConnectionType,
   NodeOperationError,
+  sleep,
 } from "n8n-workflow";
 
 // Response interface for browser task submit API
@@ -34,11 +35,6 @@ interface IBrowserTaskStatusResponse extends IDataObject {
   errorMessage?: string;
 }
 
-// Helper function to wait
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export class BrowserTask implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Parallel AI: Browser Task",
@@ -46,6 +42,7 @@ export class BrowserTask implements INodeType {
     icon: "file:icon.svg",
     group: ["transform"],
     version: 1,
+    subtitle: '={{$parameter["sessionType"]}}',
     description:
       "Execute browser automation tasks using natural language instructions",
     defaults: {
@@ -174,11 +171,11 @@ export class BrowserTask implements INodeType {
               "Content-Type": "application/json",
             },
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/browser-integrations`,
+            url: `${baseUrl}/api/v0/browser-integrations`,
             json: true,
           };
 
-          const response = await this.helpers.request!(options);
+          const response = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
           const integrations = response.integrations || [];
 
           if (!integrations.length) {
@@ -196,8 +193,7 @@ export class BrowserTask implements INodeType {
             value: integration.id as string,
             description: `Status: ${integration.status || "active"}`,
           }));
-        } catch (error) {
-          console.error("Error loading browser integrations:", error);
+        } catch {
           return [
             {
               name: "Error Loading Browser Integrations",
@@ -272,21 +268,6 @@ export class BrowserTask implements INodeType {
       requestBody.zipcode = zipcode;
     }
 
-    // Log the request details for debugging
-    console.log(
-      `Submitting browser task: "${effectiveTask.substring(0, 50)}${
-        effectiveTask.length > 50 ? "..." : ""
-      }"`
-    );
-    console.log(`Session type: ${sessionType}`);
-    console.log(`Use vision: ${useVision}`);
-    if (integrationId) {
-      console.log(`Integration ID: ${integrationId}`);
-    }
-    if (zipcode) {
-      console.log(`Zipcode: ${zipcode}`);
-    }
-
     try {
       // Step 1: Submit the browser task
       const submitOptions = {
@@ -295,16 +276,15 @@ export class BrowserTask implements INodeType {
           "Content-Type": "application/json",
         },
         method: "POST" as "POST",
-        uri: `${baseUrl}/api/v0/browser-task`,
+        url: `${baseUrl}/api/v0/browser-task`,
         body: requestBody,
         json: true,
       };
 
       const submitResponse =
-        (await this.helpers.request!(submitOptions)) as IBrowserTaskSubmitResponse;
+        (await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", submitOptions)) as IBrowserTaskSubmitResponse;
 
       const taskId = submitResponse.taskId;
-      console.log(`Browser task submitted with ID: ${taskId}`);
 
       // Step 2: Poll for completion
       const startTime = Date.now();
@@ -322,14 +302,12 @@ export class BrowserTask implements INodeType {
             "Content-Type": "application/json",
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/browser-task/${taskId}`,
+          url: `${baseUrl}/api/v0/browser-task/${taskId}`,
           json: true,
         };
 
         const statusResponse =
-          (await this.helpers.request!(statusOptions)) as IBrowserTaskStatusResponse;
-
-        console.log(`Task ${taskId} status: ${statusResponse.status} - ${statusResponse.progressMessage || ''}`);
+          (await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", statusOptions)) as IBrowserTaskStatusResponse;
 
         if (statusResponse.status === "completed") {
           // Task completed successfully
@@ -362,10 +340,6 @@ export class BrowserTask implements INodeType {
             output.zipcode = zipcode;
           }
 
-          console.log(
-            `Browser task completed successfully. Credits charged: ${result.creditsCharged}`
-          );
-
           return [this.helpers.returnJsonArray(output)];
         } else if (statusResponse.status === "failed") {
           // Task failed
@@ -397,7 +371,7 @@ export class BrowserTask implements INodeType {
         );
         return [[...executionErrorData]];
       }
-      throw error;
+      throw new NodeOperationError(this.getNode(), error as Error);
     }
   }
 }

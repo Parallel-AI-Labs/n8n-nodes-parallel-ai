@@ -31,6 +31,7 @@ export class KnowledgeBaseRetriever implements INodeType {
     icon: "file:icon.svg",
     group: ["transform"],
     version: 1,
+    subtitle: '={{$parameter["documentScopeType"]}}',
     description:
       "Retrieves relevant documents from the knowledge base based on a query",
     defaults: {
@@ -200,7 +201,7 @@ export class KnowledgeBaseRetriever implements INodeType {
         "Content-Type": "application/json",
       },
       method: "POST" as "POST",
-      uri: `${baseUrl}/api/v0/documents/search`,
+      url: `${baseUrl}/api/v0/documents/search`,
       body: {
         query: effectiveQuery,
         documentScope,
@@ -210,18 +211,8 @@ export class KnowledgeBaseRetriever implements INodeType {
       json: true,
     };
 
-    // Log the request details for debugging
-    console.log(
-      `Searching knowledge base with query: "${effectiveQuery.substring(
-        0,
-        50
-      )}${effectiveQuery.length > 50 ? "..." : ""}"`
-    );
-    console.log(`Document scope: ${JSON.stringify(documentScope)}`);
-    console.log(`Min score: ${minScore}, Top K: ${topK}`);
-
     try {
-      const responseData = await this.helpers.request!(options);
+      const responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
 
       // Format for AI Retriever output
       const formatted: IDocumentResponse = {
@@ -318,7 +309,7 @@ export class KnowledgeBaseRetriever implements INodeType {
         );
         return [[...executionErrorData]];
       }
-      throw error;
+      throw new NodeOperationError(this.getNode(), error as Error);
     }
   }
 }

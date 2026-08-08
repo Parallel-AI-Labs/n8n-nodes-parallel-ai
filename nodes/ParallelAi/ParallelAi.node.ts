@@ -7,8 +7,8 @@ import {
   INodeTypeDescription,
   NodeConnectionType,
   NodeOperationError,
+  sleep,
 } from "n8n-workflow";
-import { createReadStream } from "fs";
 
 export class ParallelAi implements INodeType {
   description: INodeTypeDescription = {
@@ -1120,12 +1120,12 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "File Path",
-        name: "filePath",
+        displayName: "Input Binary Field",
+        name: "binaryPropertyName",
         type: "string",
-        default: "",
+        default: "data",
         required: true,
-        description: "Path to the file to upload",
+        description: "Name of the binary property on the input item that contains the file to upload",
         displayOptions: {
           show: {
             resource: ["document"],
@@ -2127,11 +2127,11 @@ export class ParallelAi implements INodeType {
         try {
           const options = {
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/images/models`,
+            url: `${baseUrl}/api/v0/images/models`,
             json: true,
           };
 
-          const models = await this.helpers.request!(options);
+          const models = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
 
           if (!models || !Array.isArray(models) || models.length === 0) {
             return [
@@ -2148,8 +2148,7 @@ export class ParallelAi implements INodeType {
             value: model.id,
             description: model.description || `${model.provider} - ${model.credits} credits`,
           }));
-        } catch (error) {
-          console.error("Error loading image models:", error);
+        } catch {
           return [
             {
               name: "GPT Image 1 (Default)",
@@ -2167,11 +2166,11 @@ export class ParallelAi implements INodeType {
         try {
           const options = {
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/videos/models`,
+            url: `${baseUrl}/api/v0/videos/models`,
             json: true,
           };
 
-          const models = await this.helpers.request!(options);
+          const models = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
 
           if (!models || !Array.isArray(models) || models.length === 0) {
             return [
@@ -2194,8 +2193,7 @@ export class ParallelAi implements INodeType {
               description: model.description || `${credits}`,
             };
           });
-        } catch (error) {
-          console.error("Error loading video models:", error);
+        } catch {
           return [
             {
               name: "Google Veo 3 (Default)",
@@ -2214,14 +2212,14 @@ export class ParallelAi implements INodeType {
         try {
           const options = {
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/browser-integrations`,
+            url: `${baseUrl}/api/v0/browser-integrations`,
             json: true,
             headers: {
               "X-API-KEY": apiKey,
             },
           };
 
-          const response = await this.helpers.request!(options);
+          const response = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
           const integrations = response.integrations || [];
 
           if (!integrations.length) {
@@ -2239,8 +2237,7 @@ export class ParallelAi implements INodeType {
             value: integration.id,
             description: `Status: ${integration.status || "active"}`,
           }));
-        } catch (error) {
-          console.error("Error loading browser integrations:", error);
+        } catch {
           return [
             {
               name: "Error Loading Browser Integrations",
@@ -2260,7 +2257,7 @@ export class ParallelAi implements INodeType {
           // Request options to fetch employees from the API
           const options = {
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/employees`,
+            url: `${baseUrl}/api/v0/employees`,
             json: true,
             headers: {
               "X-API-KEY": apiKey,
@@ -2268,7 +2265,7 @@ export class ParallelAi implements INodeType {
           };
 
           // Make the request to fetch employees
-          const responseData = await this.helpers.request!(options);
+          const responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
           const employees = responseData.employees || [];
 
           if (!employees.length) {
@@ -2283,8 +2280,7 @@ export class ParallelAi implements INodeType {
               ? `Tags: ${employee.tags.join(", ")}`
               : "",
           }));
-        } catch (error) {
-          console.error("Error loading employees:", error);
+        } catch {
           return [
             {
               name: "Error Loading Employees",
@@ -2304,7 +2300,7 @@ export class ParallelAi implements INodeType {
           // Request options to fetch models from the API
           const options = {
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/models`,
+            url: `${baseUrl}/api/v0/models`,
             json: true,
             headers: {
               "X-API-KEY": apiKey,
@@ -2312,7 +2308,7 @@ export class ParallelAi implements INodeType {
           };
 
           // Make the request to fetch models
-          const responseData = await this.helpers.request!(options);
+          const responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
           const models = responseData.models || [];
 
           // Format models for the dropdown
@@ -2321,8 +2317,7 @@ export class ParallelAi implements INodeType {
             value: model.name,
             description: model.tags.join(",") || `Model ID: ${model.id}`,
           }));
-        } catch (error) {
-          console.error("Error loading models:", error);
+        } catch {
           return [
             {
               name: "Error Loading Models",
@@ -2354,11 +2349,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/employees`,
+          url: `${baseUrl}/api/v0/employees`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Chat with employee
       else if (operation === "chat") {
@@ -2451,12 +2446,12 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/employees/chat/async`,
+          url: `${baseUrl}/api/v0/employees/chat/async`,
           body,
           json: true,
         };
 
-        const startResponse = await this.helpers.request!(startOptions);
+        const startResponse = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", startOptions);
         const chatId = startResponse.chatId;
 
         if (!chatId) {
@@ -2475,7 +2470,7 @@ export class ParallelAi implements INodeType {
         while (attempt < maxAttempts && !completed) {
           // Wait before polling (skip first iteration)
           if (attempt > 0) {
-            await new Promise((resolve) => setTimeout(resolve, pollInterval));
+            await sleep(pollInterval);
           }
 
           const pollOptions = {
@@ -2483,11 +2478,11 @@ export class ParallelAi implements INodeType {
               "X-API-KEY": apiKey,
             },
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/employees/chat/async/${chatId}`,
+            url: `${baseUrl}/api/v0/employees/chat/async/${chatId}`,
             json: true,
           };
 
-          const pollResponse = await this.helpers.request!(pollOptions);
+          const pollResponse = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", pollOptions);
 
           if (pollResponse.status === "completed") {
             responseData = {
@@ -2529,11 +2524,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/lists?page=${page}&pageSize=${pageSize}`,
+          url: `${baseUrl}/api/v0/lists?page=${page}&pageSize=${pageSize}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get a specific list
       else if (operation === "get") {
@@ -2546,11 +2541,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/lists/${listId}?page=${page}&pageSize=${pageSize}`,
+          url: `${baseUrl}/api/v0/lists/${listId}?page=${page}&pageSize=${pageSize}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Create a new list
       else if (operation === "create") {
@@ -2572,12 +2567,12 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/lists`,
+          url: `${baseUrl}/api/v0/lists`,
           body,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Add a column to a list
       else if (operation === "addColumn") {
@@ -2594,12 +2589,12 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/lists/${listId}/header`,
+          url: `${baseUrl}/api/v0/lists/${listId}/header`,
           body,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Add rows to a list
       else if (operation === "addRows") {
@@ -2636,13 +2631,13 @@ export class ParallelAi implements INodeType {
               "Content-Type": "application/json",
             },
             method: "POST" as "POST",
-            uri: `${baseUrl}/api/v0/lists/${listId}/rows?createColumns=${createColumns ? 'true' : 'false'}${matchFields ? `&matchFields=${matchFields}` : ''}`,
+            url: `${baseUrl}/api/v0/lists/${listId}/rows?createColumns=${createColumns ? 'true' : 'false'}${matchFields ? `&matchFields=${matchFields}` : ''}`,
             body: { rows: [row] },
             json: true,
           };
 
           try {
-            const rowResponseData = await this.helpers.request!(options);
+            const rowResponseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
             results.push(rowResponseData);
           } catch (error) {
             results.push({
@@ -2692,7 +2687,7 @@ export class ParallelAi implements INodeType {
                 "Content-Type": "application/json",
               },
               method: "POST" as "POST",
-              uri: `${baseUrl}/api/v0/lists/${listId}/rows?createColumns=${createColumns ? 'true' : 'false'}&matchFields=${matchFields}`,
+              url: `${baseUrl}/api/v0/lists/${listId}/rows?createColumns=${createColumns ? 'true' : 'false'}&matchFields=${matchFields}`,
               body: { rows: [row] },
               json: true,
             };
@@ -2703,14 +2698,14 @@ export class ParallelAi implements INodeType {
                 "Content-Type": "application/json",
               },
               method: "PUT" as "PUT",
-              uri: `${baseUrl}/api/v0/lists/${listId}/row`,
+              url: `${baseUrl}/api/v0/lists/${listId}/row`,
               body: { row },
               json: true,
             };
           }
 
           try {
-            const rowResponseData = await this.helpers.request!(options);
+            const rowResponseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
             results.push(rowResponseData);
           } catch (error) {
             results.push({
@@ -2735,11 +2730,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/documents?path=${encodeURIComponent(path)}`,
+          url: `${baseUrl}/api/v0/documents?path=${encodeURIComponent(path)}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get a specific document
       else if (operation === "get") {
@@ -2752,11 +2747,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/documents/${documentId}/details`,
+          url: `${baseUrl}/api/v0/documents/${documentId}/details`,
           json: true,
         };
 
-        const documentData = await this.helpers.request!(documentOptions);
+        const documentData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", documentOptions);
 
         // If content is requested, get it separately
         if (includeContent) {
@@ -2765,11 +2760,11 @@ export class ParallelAi implements INodeType {
               "X-API-KEY": apiKey,
             },
             method: "GET" as "GET",
-            uri: `${baseUrl}/api/v0/documents/${documentId}/content`,
+            url: `${baseUrl}/api/v0/documents/${documentId}/content`,
             json: true,
           };
 
-          const contentData = await this.helpers.request!(contentOptions);
+          const contentData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", contentOptions);
 
           // Merge document metadata with content
           documentData.content = contentData.content;
@@ -2795,7 +2790,7 @@ export class ParallelAi implements INodeType {
               "Content-Type": "application/json",
             },
             method: "POST" as "POST",
-            uri: `${baseUrl}/api/v0/documents/create`,
+            url: `${baseUrl}/api/v0/documents/create`,
             body: {
               name,
               content,
@@ -2805,31 +2800,36 @@ export class ParallelAi implements INodeType {
             json: true,
           };
 
-          responseData = await this.helpers.request!(options);
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
         } else {
-          // Upload file as document
-          const filePath = this.getNodeParameter("filePath", 0) as string;
+          // Upload file as document from the input item's binary data
+          const binaryPropertyName = this.getNodeParameter(
+            "binaryPropertyName",
+            0,
+            "data"
+          ) as string;
+          const binaryData = this.helpers.assertBinaryData(0, binaryPropertyName);
+          const buffer = await this.helpers.getBinaryDataBuffer(0, binaryPropertyName);
+
+          const formData = new FormData();
+          formData.append(
+            "file",
+            new Blob([buffer], { type: binaryData.mimeType }),
+            binaryData.fileName || "file"
+          );
+          formData.append("path", path);
+          formData.append("tags", tags.join(","));
 
           const options = {
             headers: {
               "X-API-KEY": apiKey,
             },
             method: "POST" as "POST",
-            uri: `${baseUrl}/api/v0/documents/create`,
-            formData: {
-              file: {
-                value: createReadStream(filePath),
-                options: {
-                  filename: filePath.split('/').pop(),
-                },
-              },
-              path,
-              tags: tags.join(","),
-            },
-            json: true,
+            url: `${baseUrl}/api/v0/documents/create`,
+            body: formData,
           };
 
-          responseData = await this.helpers.request!(options);
+          responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
         }
       }
       // Update a document
@@ -2856,12 +2856,12 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "PUT" as "PUT",
-          uri: `${baseUrl}/api/v0/documents/${documentId}/update`,
+          url: `${baseUrl}/api/v0/documents/${documentId}/update`,
           body,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Delete a document
       else if (operation === "delete") {
@@ -2872,11 +2872,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "DELETE" as "DELETE",
-          uri: `${baseUrl}/api/v0/documents/${documentId}`,
+          url: `${baseUrl}/api/v0/documents/${documentId}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Move a document
       else if (operation === "move") {
@@ -2890,7 +2890,7 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/documents/move`,
+          url: `${baseUrl}/api/v0/documents/move`,
           body: {
             documentId,
             folder: {
@@ -2901,7 +2901,7 @@ export class ParallelAi implements INodeType {
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Search documents
       else if (operation === "search") {
@@ -2938,7 +2938,7 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/documents/search`,
+          url: `${baseUrl}/api/v0/documents/search`,
           body: {
             query,
             documentScope,
@@ -2948,7 +2948,7 @@ export class ParallelAi implements INodeType {
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
 
@@ -2961,11 +2961,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/documents/folders`,
+          url: `${baseUrl}/api/v0/documents/folders`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Create a new folder
       else if (operation === "create") {
@@ -2978,7 +2978,7 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/documents/folders`,
+          url: `${baseUrl}/api/v0/documents/folders`,
           body: {
             name,
             path,
@@ -2986,7 +2986,7 @@ export class ParallelAi implements INodeType {
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Delete a folder
       else if (operation === "delete") {
@@ -2998,11 +2998,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "DELETE" as "DELETE",
-          uri: `${baseUrl}/api/v0/documents/folders/${folderId}?delete=${deleteContents}`,
+          url: `${baseUrl}/api/v0/documents/folders/${folderId}?delete=${deleteContents}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
 
@@ -3018,11 +3018,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/sequences?page=${page}&pageSize=${pageSize}`,
+          url: `${baseUrl}/api/v0/sequences?page=${page}&pageSize=${pageSize}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get sequence members
       else if (operation === "getMembers") {
@@ -3035,11 +3035,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/sequences/${sequenceId}/members?page=${page}&pageSize=${pageSize}`,
+          url: `${baseUrl}/api/v0/sequences/${sequenceId}/members?page=${page}&pageSize=${pageSize}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Add a member to a sequence
       else if (operation === "addMember") {
@@ -3069,7 +3069,7 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/sequences/${sequenceId}/members`,
+          url: `${baseUrl}/api/v0/sequences/${sequenceId}/members`,
           body: {
             email,
             firstName,
@@ -3080,7 +3080,7 @@ export class ParallelAi implements INodeType {
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Remove a member from a sequence
       else if (operation === "removeMember") {
@@ -3092,11 +3092,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "DELETE" as "DELETE",
-          uri: `${baseUrl}/api/v0/sequences/${sequenceId}/members/${memberId}`,
+          url: `${baseUrl}/api/v0/sequences/${sequenceId}/members/${memberId}`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Trigger a sequence member
       else if (operation === "triggerMember") {
@@ -3109,12 +3109,12 @@ export class ParallelAi implements INodeType {
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/sequences/${sequenceId}/members/${memberId}/trigger`,
+          url: `${baseUrl}/api/v0/sequences/${sequenceId}/members/${memberId}/trigger`,
           body: {},
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
 
@@ -3171,12 +3171,12 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/images/generate`,
+          url: `${baseUrl}/api/v0/images/generate`,
           body,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get available image models
       else if (operation === "getModels") {
@@ -3185,11 +3185,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/images/models`,
+          url: `${baseUrl}/api/v0/images/models`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
 
@@ -3250,22 +3250,22 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "POST" as "POST",
-          uri: `${baseUrl}/api/v0/videos/generate`,
+          url: `${baseUrl}/api/v0/videos/generate`,
           body,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get available video models
       else if (operation === "getModels") {
         const options = {
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/videos/models`,
+          url: `${baseUrl}/api/v0/videos/models`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get video status
       else if (operation === "getStatus") {
@@ -3276,11 +3276,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/videos/${videoId}/status`,
+          url: `${baseUrl}/api/v0/videos/${videoId}/status`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
     // SYSTEM RESOURCE
@@ -3292,11 +3292,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/models`,
+          url: `${baseUrl}/api/v0/models`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
       // Get user settings
       else if (operation === "getSettings") {
@@ -3305,11 +3305,11 @@ export class ParallelAi implements INodeType {
             "X-API-KEY": apiKey,
           },
           method: "GET" as "GET",
-          uri: `${baseUrl}/api/v0/settings`,
+          url: `${baseUrl}/api/v0/settings`,
           json: true,
         };
 
-        responseData = await this.helpers.request!(options);
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
 
