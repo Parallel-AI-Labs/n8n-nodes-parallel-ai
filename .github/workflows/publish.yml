@@ -3,10 +3,14 @@ name: Publish to npm
 # Publishes the package to npm with provenance, as required for n8n verified
 # community nodes (https://docs.n8n.io/integrations/creating-nodes/deploy/submit-community-nodes/).
 #
-# Triggered by publishing a GitHub Release. Create a release whose tag matches
-# the version in package.json (e.g. v0.3.19) to publish that version.
+# Triggered by pushing a version tag (or publishing a GitHub Release). Tag the
+# release commit with the version in package.json (e.g. v0.3.19) to publish it:
+#   git tag v0.3.19 && git push origin v0.3.19
 
 on:
+  push:
+    tags:
+      - "v*"
   release:
     types: [published]
   workflow_dispatch:
