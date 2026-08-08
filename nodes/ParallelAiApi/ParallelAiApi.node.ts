@@ -81,7 +81,6 @@ export class ParallelAiApi implements INodeType {
         typeOptions: {
           loadOptionsMethod: "getResources",
         },
-        options: [],
         default: "",
         required: true,
         description:
@@ -96,7 +95,6 @@ export class ParallelAiApi implements INodeType {
           loadOptionsMethod: "getOperations",
           loadOptionsDependsOn: ["resource"],
         },
-        options: [],
         default: "",
         required: true,
         description:

@@ -24,7 +24,7 @@ interface IDocumentResponse extends IDataObject {
   documents: IDocument[];
 }
 
-export class KnowledgeBaseRetriever implements INodeType {
+export class ParallelAiKnowledgeBaseRetriever implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Parallel AI: Knowledge Base Retriever",
     name: "parallelAiKnowledgeBaseRetriever",

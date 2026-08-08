@@ -35,7 +35,7 @@ interface IBrowserTaskStatusResponse extends IDataObject {
   errorMessage?: string;
 }
 
-export class BrowserTask implements INodeType {
+export class ParallelAiBrowserTask implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Parallel AI: Browser Task",
     name: "parallelAiBrowserTask",
