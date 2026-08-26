@@ -1,10 +1,10 @@
-# Using the Parallel AI Knowledge Base Retriever in n8n
+# Using the Parallel AI Knowledge Base Search in n8n
 
-The Knowledge Base Retriever node allows you to search through your company's knowledge base using semantic search and integrate the results into n8n AI Agent workflows.
+The **Knowledge Base → Search** operation of the Parallel AI node allows you to search through your company's knowledge base using semantic search and integrate the results into n8n AI Agent workflows.
 
 ## Overview
 
-This node connects to the Parallel AI document search API and returns relevant documents based on a text query. It's specifically designed to work with the n8n AI Agent system as a retriever node, allowing you to enrich AI workflows with knowledge from your document base.
+This operation connects to the Parallel AI document search API and returns relevant documents based on a text query. It's specifically designed to work with the n8n AI Agent system as a retriever, allowing you to enrich AI workflows with knowledge from your document base.
 
 ## Key Features
 
@@ -12,38 +12,39 @@ This node connects to the Parallel AI document search API and returns relevant d
 - Configurable scope for searching all documents, specific paths, or individual documents
 - Adjustable similarity threshold and result limit
 - Compatible with n8n's AI Agent system as a retriever
-- Accepts input from other nodes to dynamically set the search query
+- Accepts expressions so the query can come from previous nodes
 
 ## Usage
 
 ### Basic Configuration
 
-1. Add the "Parallel AI: Knowledge Base Retriever" node to your workflow
+1. Add the "Parallel AI" node to your workflow
 2. Configure your API credentials in the node settings
-3. Enter a search query or connect a node that provides the query
-4. Set additional parameters:
+3. Set **Resource** to "Knowledge Base" and **Operation** to "Search"
+4. Enter a search query (or use an expression to take it from a previous node)
+5. Set additional parameters:
    - Document Scope: All Documents, Specific Path, or Specific Document
    - Minimum Score: Threshold for relevance (0-1)
    - Maximum Results: Number of results to return
 
 ### Integration with AI Agents
 
-The Knowledge Base Retriever provides two outputs:
+The Parallel AI node provides two outputs:
 
 1. **Standard Output**: Contains the search results in a user-friendly format
-2. **AI Retriever Output**: Formatted specifically for integration with n8n's AI Agent system
+2. **AI Tool Output**: Formatted specifically for integration with n8n's AI Agent system
 
 To use with AI Agents:
 
-1. Connect the "AI Retriever Output" to an AI Agent node
+1. Connect the "AI Tool Output" to an AI Agent node
 2. The agent will be able to use information from the retrieved documents when generating responses
 
 ### Example Workflow: Question Answering with Knowledge Base
 
 1. Start with a "Manual Trigger" node
 2. Connect to a "Set" node to define your query
-3. Connect to the "Parallel AI: Knowledge Base Retriever" node
-4. Connect the AI Retriever output to an "AI Agent" node
+3. Connect to the "Parallel AI" node (Resource: Knowledge Base, Operation: Search)
+4. Connect the AI Tool output to an "AI Agent" node
 5. Configure the AI Agent with a prompt like "Answer the question using the retrieved documents"
 
 This creates a workflow that retrieves relevant documents from your knowledge base and uses them to answer questions.
@@ -61,7 +62,7 @@ This creates a workflow that retrieves relevant documents from your knowledge ba
 
 ## Output Format
 
-The AI Retriever output follows this structure:
+The AI Tool output follows this structure:
 
 ```json
 {
@@ -70,7 +71,6 @@ The AI Retriever output follows this structure:
       "pageContent": "The actual document content...",
       "metadata": {
         "title": "Document Title",
-        "score": 0.85,
         "source": "knowledge-base-search-0"
       }
     },

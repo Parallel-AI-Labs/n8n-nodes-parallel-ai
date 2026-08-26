@@ -1,6 +1,6 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "n8n nodes for Parallel AI",
   "author": {
     "name": "Parallel AI",
@@ -31,10 +31,7 @@
       "dist/credentials/ParallelAiApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/ParallelAi/ParallelAi.node.js",
-      "dist/nodes/ParallelAiApi/ParallelAiApi.node.js",
-      "dist/nodes/KnowledgeBaseRetriever/ParallelAiKnowledgeBaseRetriever.node.js",
-      "dist/nodes/BrowserTask/ParallelAiBrowserTask.node.js"
+      "dist/nodes/ParallelAi/ParallelAi.node.js"
     ]
   },
   "publishConfig": {

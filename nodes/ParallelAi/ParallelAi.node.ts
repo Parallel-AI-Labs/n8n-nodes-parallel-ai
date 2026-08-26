@@ -1,14 +1,103 @@
 import {
+  IDataObject,
   IExecuteFunctions,
+  IHttpRequestOptions,
   ILoadOptionsFunctions,
   INodeExecutionData,
   INodePropertyOptions,
   INodeType,
   INodeTypeDescription,
+  JsonObject,
+  NodeApiError,
   NodeConnectionType,
   NodeOperationError,
+  ResourceMapperField,
+  ResourceMapperFields,
+  ResourceMapperValue,
+  jsonParse,
   sleep,
 } from "n8n-workflow";
+
+import {
+  OperationParam,
+  findOperation,
+  getCatalog,
+  getCatalogBaseUrl,
+} from "./SpecCatalog";
+
+// Response interface for browser task submit API
+interface IBrowserTaskSubmitResponse extends IDataObject {
+  taskId: string;
+  status: string;
+  message: string;
+}
+
+// Response interface for browser task status API
+interface IBrowserTaskStatusResponse extends IDataObject {
+  taskId: string;
+  status: string;
+  progressMessage?: string;
+  result?: {
+    success: boolean;
+    result: string;
+    history: string[];
+    creditsCharged: number;
+  };
+  errorMessage?: string;
+}
+
+// Knowledge base document shape (compatible with n8n AI retriever documents)
+interface IKnowledgeBaseDocument extends IDataObject {
+  pageContent: string;
+  metadata: {
+    title: string;
+    source: string;
+  };
+}
+
+/**
+ * Converts a resource-mapper value for one API parameter into what the API
+ * expects, returning undefined when an optional parameter was left unset so
+ * it is omitted from the request entirely.
+ */
+function coerceParamValue(param: OperationParam, raw: unknown): unknown {
+  if (raw === undefined || raw === null) return undefined;
+
+  if (param.kind === "json") {
+    if (typeof raw === "string") {
+      if (raw.trim() === "") return undefined;
+      return jsonParse<IDataObject | IDataObject[]>(raw);
+    }
+    return raw;
+  }
+
+  if (!param.required && param.kind === "string" && raw === "") return undefined;
+
+  return raw;
+}
+
+/**
+ * Parses the plain-text results returned by the document search endpoint
+ * into individual documents.
+ */
+function parseKnowledgeBaseResults(resultsText: string): IKnowledgeBaseDocument[] {
+  const documentSections = resultsText
+    .split(/\n\nSource: page \d+/)
+    .filter((doc: string) => doc.trim() !== "");
+
+  return documentSections.map((section: string, index: number) => {
+    const titleMatch = section.match(/Title: (.*?)(?:\n|$)/);
+    const contentMatch = section.match(/Content: ([\s\S]*?)$/);
+
+    return {
+      pageContent: contentMatch ? contentMatch[1].trim() : section.trim(),
+      metadata: {
+        title: titleMatch ? titleMatch[1].trim() : `Document ${index + 1}`,
+        source: `knowledge-base-search-${index}`,
+      },
+    };
+  });
+}
 
 export class ParallelAi implements INodeType {
   description: INodeTypeDescription = {
@@ -41,6 +130,15 @@ export class ParallelAi implements INodeType {
         noDataExpression: true,
         options: [
           {
+            name: "API (Any Operation)",
+            value: "api",
+            description: "Call any Parallel AI API operation, loaded live from the OpenAPI spec",
+          },
+          {
+            name: "Browser Task",
+            value: "browserTask",
+          },
+          {
             name: "Document",
             value: "document",
           },
@@ -55,6 +153,10 @@ export class ParallelAi implements INodeType {
           {
             name: "Image",
             value: "image",
+          },
+          {
+            name: "Knowledge Base",
+            value: "knowledgeBase",
           },
           {
             name: "List",
@@ -75,6 +177,269 @@ export class ParallelAi implements INodeType {
         ],
         default: "employee",
         required: true,
+      },
+
+      // API OPERATIONS (spec-driven)
+      {
+        displayName: "API Resource Name or ID",
+        name: "apiResource",
+        type: "options",
+        noDataExpression: true,
+        typeOptions: {
+          loadOptionsMethod: "getApiResources",
+        },
+        default: "",
+        required: true,
+        description:
+          'API category to work with, loaded live from the API spec. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+        displayOptions: {
+          show: {
+            resource: ["api"],
+          },
+        },
+      },
+      {
+        displayName: "Operation Name or ID",
+        name: "operation",
+        type: "options",
+        noDataExpression: true,
+        typeOptions: {
+          loadOptionsMethod: "getApiOperations",
+          loadOptionsDependsOn: ["apiResource"],
+        },
+        default: "",
+        required: true,
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        displayOptions: {
+          show: {
+            resource: ["api"],
+          },
+        },
+      },
+      {
+        displayName: "Parameters",
+        name: "parameters",
+        type: "resourceMapper",
+        noDataExpression: true,
+        default: {
+          mappingMode: "defineBelow",
+          value: null,
+        },
+        required: true,
+        typeOptions: {
+          loadOptionsDependsOn: ["apiResource", "operation"],
+          resourceMapper: {
+            resourceMapperMethod: "getOperationParameters",
+            mode: "add",
+            fieldWords: {
+              singular: "parameter",
+              plural: "parameters",
+            },
+            addAllFields: true,
+            supportAutoMap: false,
+          },
+        },
+        displayOptions: {
+          show: {
+            resource: ["api"],
+          },
+        },
+      },
+
+      // BROWSER TASK OPERATIONS
+      {
+        displayName: "Operation",
+        name: "operation",
+        type: "options",
+        noDataExpression: true,
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+          },
+        },
+        options: [
+          {
+            name: "Create",
+            value: "create",
+            action: "Create a browser task",
+            description: "Submit a browser task and return immediately with its task ID",
+          },
+          {
+            name: "Get",
+            value: "get",
+            action: "Get a browser task",
+            description: "Get the status and result of a browser task by ID",
+          },
+          {
+            name: "Run",
+            value: "run",
+            action: "Run a browser task",
+            description: "Submit a browser task and wait for it to complete",
+          },
+        ],
+        default: "run",
+      },
+      {
+        displayName: "Task",
+        name: "task",
+        type: "string",
+        default: "",
+        required: true,
+        description:
+          "Natural language description of the browser task to perform (e.g., 'Navigate to example.com and extract the page title')",
+        typeOptions: {
+          alwaysOpenEditWindow: true,
+          rows: 4,
+        },
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["create", "run"],
+          },
+        },
+      },
+      {
+        displayName: "Session Type",
+        name: "sessionType",
+        type: "options",
+        options: [
+          {
+            name: "Authenticated",
+            value: "authenticated",
+            description: "Use an authenticated browser session from an integration",
+          },
+          {
+            name: "Regular",
+            value: "regular",
+            description: "Use a standard browser session without authentication",
+          },
+          {
+            name: "Residential Proxy",
+            value: "residential",
+            description: "Use a residential proxy with US zipcode targeting",
+          },
+        ],
+        default: "regular",
+        description: "Type of browser session to use",
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["create", "run"],
+          },
+        },
+      },
+      {
+        displayName: "Browser Integration Name or ID",
+        name: "browserIntegrationId",
+        type: "options",
+        default: "",
+        required: true,
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["create", "run"],
+            sessionType: ["authenticated"],
+          },
+        },
+        typeOptions: {
+          loadOptionsMethod: "getBrowserIntegrations",
+        },
+      },
+      {
+        displayName: "Zipcode",
+        name: "zipcode",
+        type: "string",
+        default: "",
+        required: true,
+        placeholder: "e.g. 94102",
+        description: "5-digit US zipcode for residential proxy targeting",
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["create", "run"],
+            sessionType: ["residential"],
+          },
+        },
+      },
+      {
+        displayName: "Use Vision",
+        name: "useVision",
+        type: "boolean",
+        default: false,
+        description:
+          "Whether to enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["create", "run"],
+          },
+        },
+      },
+      {
+        displayName: "Timeout (Seconds)",
+        name: "browserTimeout",
+        type: "number",
+        default: 600,
+        description: "Maximum time to wait for the browser task to complete",
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["run"],
+          },
+        },
+      },
+      {
+        displayName: "Poll Interval (Seconds)",
+        name: "browserPollInterval",
+        type: "number",
+        default: 5,
+        description: "How often to check the task status while waiting",
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["run"],
+          },
+        },
+      },
+      {
+        displayName: "Task ID",
+        name: "browserTaskId",
+        type: "string",
+        default: "",
+        required: true,
+        description: "ID of the browser task to get",
+        displayOptions: {
+          show: {
+            resource: ["browserTask"],
+            operation: ["get"],
+          },
+        },
+      },
+
+      // KNOWLEDGE BASE OPERATIONS
+      {
+        displayName: "Operation",
+        name: "operation",
+        type: "options",
+        noDataExpression: true,
+        displayOptions: {
+          show: {
+            resource: ["knowledgeBase"],
+          },
+        },
+        options: [
+          {
+            name: "Search",
+            value: "search",
+            action: "Search the knowledge base",
+            description:
+              "Retrieve relevant documents from the knowledge base for a query, formatted for use with AI agents",
+          },
+        ],
+        default: "search",
       },
 
       // EMPLOYEE OPERATIONS
@@ -1186,7 +1551,7 @@ export class ParallelAi implements INodeType {
         description: "Text query to search for in documents",
         displayOptions: {
           show: {
-            resource: ["document"],
+            resource: ["document", "knowledgeBase"],
             operation: ["search"],
           },
         },
@@ -1213,7 +1578,7 @@ export class ParallelAi implements INodeType {
         description: "Scope of documents to search",
         displayOptions: {
           show: {
-            resource: ["document"],
+            resource: ["document", "knowledgeBase"],
             operation: ["search"],
           },
         },
@@ -1227,7 +1592,7 @@ export class ParallelAi implements INodeType {
         description: "Path to search documents in",
         displayOptions: {
           show: {
-            resource: ["document"],
+            resource: ["document", "knowledgeBase"],
             operation: ["search"],
             documentScopeType: ["path"],
           },
@@ -1242,7 +1607,7 @@ export class ParallelAi implements INodeType {
         description: "ID of the specific document to search within",
         displayOptions: {
           show: {
-            resource: ["document"],
+            resource: ["document", "knowledgeBase"],
             operation: ["search"],
             documentScopeType: ["document"],
           },
@@ -1261,7 +1626,7 @@ export class ParallelAi implements INodeType {
         description: "Minimum similarity score threshold (0-1)",
         displayOptions: {
           show: {
-            resource: ["document"],
+            resource: ["document", "knowledgeBase"],
             operation: ["search"],
           },
         },
@@ -1278,7 +1643,7 @@ export class ParallelAi implements INodeType {
         description: "Maximum number of results to return",
         displayOptions: {
           show: {
-            resource: ["document"],
+            resource: ["document", "knowledgeBase"],
             operation: ["search"],
           },
         },
@@ -2120,6 +2485,30 @@ export class ParallelAi implements INodeType {
 
   methods = {
     loadOptions: {
+      async getApiResources(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const baseUrl = await getCatalogBaseUrl(this);
+        const resources = await getCatalog(this, baseUrl);
+        return resources.map((resource) => ({
+          name: resource.name,
+          value: resource.value,
+          description: `${resource.operations.length} operations`,
+        }));
+      },
+
+      async getApiOperations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const resourceValue = this.getCurrentNodeParameter("apiResource") as string;
+        if (!resourceValue) return [];
+        const baseUrl = await getCatalogBaseUrl(this);
+        const resources = await getCatalog(this, baseUrl);
+        const resource = resources.find((r) => r.value === resourceValue);
+        if (!resource) return [];
+        return resource.operations.map((op) => ({
+          name: op.displayName,
+          value: op.value,
+          description: op.description || `${op.method} ${op.path}`,
+        }));
+      },
+
       async getImageModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const credentials = await this.getCredentials("parallelAiApi");
         const baseUrl = credentials.baseUrl as string;
@@ -2328,6 +2717,42 @@ export class ParallelAi implements INodeType {
         }
       },
     },
+
+    resourceMapping: {
+      async getOperationParameters(this: ILoadOptionsFunctions): Promise<ResourceMapperFields> {
+        const resourceValue = this.getCurrentNodeParameter("apiResource") as string;
+        const operationValue = this.getCurrentNodeParameter("operation") as string;
+        if (!resourceValue || !operationValue) return { fields: [] };
+
+        const baseUrl = await getCatalogBaseUrl(this);
+        const resources = await getCatalog(this, baseUrl);
+        const operation = findOperation(resources, resourceValue, operationValue);
+        if (!operation) return { fields: [] };
+
+        const fields: ResourceMapperField[] = operation.params.map((param) => ({
+          id: param.id,
+          displayName: param.description
+            ? `${param.apiName} — ${param.description}`
+            : param.apiName,
+          required: param.required,
+          defaultMatch: false,
+          display: true,
+          type:
+            param.enumOptions !== undefined
+              ? "options"
+              : param.kind === "json"
+                ? "object"
+                : param.kind,
+          options: param.enumOptions,
+          canBeUsedToMatch: false,
+        }));
+
+        return {
+          fields,
+          emptyFieldsNotice: "This operation takes no parameters.",
+        };
+      },
+    },
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -2337,6 +2762,12 @@ export class ParallelAi implements INodeType {
 
     const resource = this.getNodeParameter("resource", 0) as string;
     const operation = this.getNodeParameter("operation", 0) as string;
+
+    // API RESOURCE (spec-driven, processed per input item)
+    if (resource === "api") {
+      const returnData = await executeApiOperation.call(this);
+      return [returnData, returnData];
+    }
 
     let responseData;
 
@@ -3283,6 +3714,183 @@ export class ParallelAi implements INodeType {
         responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
       }
     }
+    // BROWSER TASK RESOURCE
+    else if (resource === "browserTask") {
+      if (operation === "create" || operation === "run") {
+        const task = this.getNodeParameter("task", 0) as string;
+        const sessionType = this.getNodeParameter("sessionType", 0) as string;
+        const useVision = this.getNodeParameter("useVision", 0) as boolean;
+
+        const requestBody: IDataObject = { task, sessionType, useVision };
+        if (sessionType === "authenticated") {
+          requestBody.integrationId = this.getNodeParameter("browserIntegrationId", 0) as string;
+        }
+        if (sessionType === "residential") {
+          requestBody.zipcode = this.getNodeParameter("zipcode", 0) as string;
+        }
+
+        const submitOptions = {
+          headers: {
+            "X-API-KEY": apiKey,
+            "Content-Type": "application/json",
+          },
+          method: "POST" as "POST",
+          url: `${baseUrl}/api/v0/browser-task`,
+          body: requestBody,
+          json: true,
+        };
+
+        const submitResponse = (await this.helpers.httpRequestWithAuthentication.call(
+          this,
+          "parallelAiApi",
+          submitOptions
+        )) as IBrowserTaskSubmitResponse;
+
+        if (operation === "create") {
+          responseData = submitResponse;
+        } else {
+          const taskId = submitResponse.taskId;
+          const timeout = this.getNodeParameter("browserTimeout", 0, 600) as number;
+          const pollInterval = this.getNodeParameter("browserPollInterval", 0, 5) as number;
+          const maxAttempts = Math.max(1, Math.ceil(timeout / Math.max(1, pollInterval)));
+          let completed = false;
+
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            await sleep(pollInterval * 1000);
+
+            const statusOptions = {
+              headers: {
+                "X-API-KEY": apiKey,
+              },
+              method: "GET" as "GET",
+              url: `${baseUrl}/api/v0/browser-task/${taskId}`,
+              json: true,
+            };
+
+            const statusResponse = (await this.helpers.httpRequestWithAuthentication.call(
+              this,
+              "parallelAiApi",
+              statusOptions
+            )) as IBrowserTaskStatusResponse;
+
+            if (statusResponse.status === "completed") {
+              const result = statusResponse.result;
+              if (!result || !result.success) {
+                throw new NodeOperationError(
+                  this.getNode(),
+                  `Browser task failed: ${result?.result || "Unknown error"}`
+                );
+              }
+
+              const output: IDataObject = {
+                success: result.success,
+                result: result.result,
+                history: result.history || [],
+                creditsCharged: result.creditsCharged,
+                task,
+                sessionType,
+                useVision,
+                taskId,
+              };
+              if (requestBody.integrationId) output.integrationId = requestBody.integrationId;
+              if (requestBody.zipcode) output.zipcode = requestBody.zipcode;
+
+              responseData = output;
+              completed = true;
+              break;
+            } else if (statusResponse.status === "failed") {
+              throw new NodeOperationError(
+                this.getNode(),
+                `Browser task failed: ${statusResponse.errorMessage || "Unknown error"}`
+              );
+            } else if (statusResponse.status === "cancelled") {
+              throw new NodeOperationError(this.getNode(), "Browser task was cancelled");
+            }
+          }
+
+          if (!completed) {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Browser task timed out after ${timeout} seconds. Task ID: ${taskId}. Use the "Get" operation to check its status later.`
+            );
+          }
+        }
+      }
+      // Get a browser task
+      else if (operation === "get") {
+        const taskId = this.getNodeParameter("browserTaskId", 0) as string;
+
+        const options = {
+          headers: {
+            "X-API-KEY": apiKey,
+          },
+          method: "GET" as "GET",
+          url: `${baseUrl}/api/v0/browser-task/${taskId}`,
+          json: true,
+        };
+
+        responseData = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
+      }
+    }
+    // KNOWLEDGE BASE RESOURCE
+    else if (resource === "knowledgeBase") {
+      if (operation === "search") {
+        const query = this.getNodeParameter("query", 0) as string;
+        const documentScopeType = this.getNodeParameter("documentScopeType", 0) as string;
+        const minScore = this.getNodeParameter("minScore", 0) as number;
+        const topK = this.getNodeParameter("topK", 0) as number;
+
+        if (!query || query.trim() === "") {
+          throw new NodeOperationError(this.getNode(), "No query provided. Please provide a query.");
+        }
+
+        let documentScope: IDataObject = { type: "root" };
+        if (documentScopeType === "path") {
+          documentScope = {
+            type: "folder",
+            path: this.getNodeParameter("documentPath", 0) as string,
+          };
+        } else if (documentScopeType === "document") {
+          documentScope = {
+            type: "file",
+            id: this.getNodeParameter("scopeDocumentId", 0) as string,
+          };
+        }
+
+        const options = {
+          headers: {
+            "X-API-KEY": apiKey,
+            "Content-Type": "application/json",
+          },
+          method: "POST" as "POST",
+          url: `${baseUrl}/api/v0/documents/search`,
+          body: { query, documentScope, minScore, topK },
+          json: true,
+        };
+
+        const searchResponse = await this.helpers.httpRequestWithAuthentication.call(
+          this,
+          "parallelAiApi",
+          options
+        );
+
+        const documents: IKnowledgeBaseDocument[] =
+          searchResponse.found && typeof searchResponse.results === "string"
+            ? parseKnowledgeBaseResults(searchResponse.results)
+            : [];
+
+        responseData = {
+          found: documents.length > 0,
+          query,
+          results: documents.map((doc) => ({
+            title: doc.metadata.title,
+            content: doc.pageContent,
+          })),
+          documents,
+          rawResults: searchResponse.results ?? "",
+        };
+      }
+    }
     // SYSTEM RESOURCE
     else if (resource === "system") {
       // Get available models
@@ -3335,6 +3943,9 @@ export class ParallelAi implements INodeType {
           model: this.getNodeParameter("model", 0),
         }
       }];
+    } else if (resource === "knowledgeBase" && operation === "search") {
+      // Format knowledge base results the way n8n AI retrievers expect
+      aiToolOutput = [{ documents: responseData.documents }];
     } else if (resource === "document" && operation === "search" && responseData?.results) {
       // Format document search results for AI Tool output (similar to KnowledgeBaseRetriever)
       aiToolOutput = [{
@@ -3351,4 +3962,95 @@ export class ParallelAi implements INodeType {
       this.helpers.returnJsonArray(aiToolOutput),
     ];
   }
+}
+
+/**
+ * Executes the spec-driven "API" resource: resolves the chosen operation in
+ * the live OpenAPI catalog and issues one request per input item.
+ */
+async function executeApiOperation(this: IExecuteFunctions): Promise<INodeExecutionData[]> {
+  const items = this.getInputData();
+  const returnData: INodeExecutionData[] = [];
+
+  const baseUrl = await getCatalogBaseUrl(this);
+  const resources = await getCatalog(this, baseUrl);
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      const apiResource = this.getNodeParameter("apiResource", i) as string;
+      const operationValue = this.getNodeParameter("operation", i) as string;
+      const operation = findOperation(resources, apiResource, operationValue);
+
+      if (!operation) {
+        throw new NodeOperationError(
+          this.getNode(),
+          `Operation "${operationValue}" was not found for API resource "${apiResource}" in the current API spec`,
+          { itemIndex: i }
+        );
+      }
+
+      const mapperValue = this.getNodeParameter("parameters", i, {}) as ResourceMapperValue;
+      const rawValues = (mapperValue?.value ?? {}) as IDataObject;
+
+      let path = operation.path;
+      const qs: IDataObject = {};
+      const body: IDataObject = {};
+
+      for (const param of operation.params) {
+        const value = coerceParamValue(param, rawValues[param.id]);
+        if (value === undefined) {
+          if (param.required && param.location === "path") {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Missing required parameter "${param.apiName}"`,
+              { itemIndex: i }
+            );
+          }
+          continue;
+        }
+        if (param.location === "path") {
+          path = path.replace(`{${param.apiName}}`, encodeURIComponent(String(value)));
+        } else if (param.location === "query") {
+          qs[param.apiName] = value as IDataObject[keyof IDataObject];
+        } else {
+          body[param.apiName] = value as IDataObject[keyof IDataObject];
+        }
+      }
+
+      const options: IHttpRequestOptions = {
+        method: operation.method,
+        url: `${baseUrl}${path}`,
+        json: true,
+      };
+      if (Object.keys(qs).length > 0) options.qs = qs;
+      if (Object.keys(body).length > 0) options.body = body;
+
+      const responseData = await this.helpers.httpRequestWithAuthentication.call(
+        this,
+        "parallelAiApi",
+        options
+      );
+
+      const executionData = this.helpers.constructExecutionMetaData(
+        this.helpers.returnJsonArray(responseData as IDataObject | IDataObject[]),
+        { itemData: { item: i } }
+      );
+      returnData.push(...executionData);
+    } catch (error) {
+      if (this.continueOnFail()) {
+        const executionErrorData = this.helpers.constructExecutionMetaData(
+          this.helpers.returnJsonArray({ error: (error as Error).message }),
+          { itemData: { item: i } }
+        );
+        returnData.push(...executionErrorData);
+        continue;
+      }
+      if (error instanceof NodeOperationError) {
+        throw new NodeOperationError(this.getNode(), error, { itemIndex: i });
+      }
+      throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex: i });
+    }
+  }
+
+  return returnData;
 }
