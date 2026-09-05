@@ -112,8 +112,7 @@ export class ParallelAi implements INodeType {
       name: "Parallel AI",
     },
     inputs: [NodeConnectionType.Main],
-    outputs: [NodeConnectionType.Main, NodeConnectionType.AiTool],
-    outputNames: ["Standard Output", "AI Tool Output"],
+    outputs: [NodeConnectionType.Main],
     usableAsTool: true,
     credentials: [
       {
@@ -365,44 +364,64 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Use Vision",
-        name: "useVision",
-        type: "boolean",
-        default: false,
-        description:
-          "Whether to enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["browserTask"],
-            operation: ["create", "run"],
+            operation: ["create"],
           },
         },
+        options: [
+        {
+          displayName: "Use Vision",
+          name: "useVision",
+          type: "boolean",
+          default: false,
+          description:
+            "Whether to enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
+        },
+        ],
       },
       {
-        displayName: "Timeout (Seconds)",
-        name: "browserTimeout",
-        type: "number",
-        default: 600,
-        description: "Maximum time to wait for the browser task to complete",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["browserTask"],
             operation: ["run"],
           },
         },
-      },
-      {
-        displayName: "Poll Interval (Seconds)",
-        name: "browserPollInterval",
-        type: "number",
-        default: 5,
-        description: "How often to check the task status while waiting",
-        displayOptions: {
-          show: {
-            resource: ["browserTask"],
-            operation: ["run"],
-          },
+        options: [
+        {
+          displayName: "Poll Interval (Seconds)",
+          name: "browserPollInterval",
+          type: "number",
+          default: 5,
+          description: "How often to check the task status while waiting",
         },
+        {
+          displayName: "Timeout (Seconds)",
+          name: "browserTimeout",
+          type: "number",
+          default: 600,
+          description: "Maximum time to wait for the browser task to complete",
+        },
+        {
+          displayName: "Use Vision",
+          name: "useVision",
+          type: "boolean",
+          default: false,
+          description:
+            "Whether to enable vision-based browser automation (uses screenshots for better understanding of page content, but may increase costs)",
+        },
+        ],
       },
       {
         displayName: "Task ID",
@@ -787,389 +806,218 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Model Name or ID",
-        name: "model",
-        type: "options",
-        typeOptions: {
-          loadOptionsMethod: "getModels",
-        },
-        default: "",
-        description:
-          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["employee"],
             operation: ["chat"],
           },
         },
-      },
-      {
-        displayName: "Knowledge Sources",
-        name: "knowledgeSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Knowledge Base",
-        name: "documents",
-        type: "boolean",
-        default: true,
-        description: "Whether to access company knowledge base for information",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Search Engine",
-        name: "searchEngine",
-        type: "boolean",
-        default: false,
-        description: "Whether to allow searching the web for information",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Websites",
-        name: "websites",
-        type: "boolean",
-        default: false,
-        description: "Whether to allow accessing and reading websites",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use News",
-        name: "news",
-        type: "boolean",
-        default: false,
-        description: "Whether to allow searching news for recent information",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Memory Settings",
-        name: "memorySection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Short-Term Memory",
-        name: "shortTermMemories",
-        type: "boolean",
-        default: true,
-        description: "Whether to recall information from the current conversation",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Long-Term Memory",
-        name: "longTermMemories",
-        type: "boolean",
-        default: false,
-        description: "Whether to access information from past conversations",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Memory Scope",
-        name: "memoryScope",
-        type: "options",
         options: [
-          {
-            name: "Current Chat",
-            value: "chat",
+        {
+          displayName: "Browser Integration Name or ID",
+          name: "browserIntegrationId",
+          type: "options",
+          default: "",
+          description:
+            'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+          typeOptions: {
+            loadOptionsMethod: "getBrowserIntegrations",
           },
-          {
-            name: "Company-Wide",
-            value: "company",
+          options: [],
+        },
+        {
+          displayName: "Browser Session Type",
+          name: "browserSessionType",
+          type: "options",
+          options: [
+            {
+              name: "No Session (Basic)",
+              value: "none",
+              description: "Use a standard browser session without authentication",
+            },
+            {
+              name: "Browser Session Integration",
+              value: "integration",
+              description: "Use an authenticated browser session from an integration",
+            },
+            {
+              name: "Residential Proxy",
+              value: "residential",
+              description: "Use a residential proxy with US zipcode targeting",
+            },
+          ],
+          default: "none",
+          description: "Type of browser session to use",
+        },
+        {
+          displayName: "Create Documents",
+          name: "documentCreation",
+          type: "boolean",
+          default: false,
+          description: "Whether the AI can generate PDF, DOCX, or CSV files and email them to you",
+        },
+        {
+          displayName: "Enable Browser Tasks",
+          name: "browserTaskEnabled",
+          type: "boolean",
+          default: false,
+          description: "Whether to allow the AI to control a web browser for automation tasks",
+        },
+        {
+          displayName: "Memory Scope",
+          name: "memoryScope",
+          type: "options",
+          options: [
+            {
+              name: "Current Chat",
+              value: "chat",
+            },
+            {
+              name: "Company-Wide",
+              value: "company",
+            },
+          ],
+          default: "chat",
+          description: "Scope of memory to access for the conversation",
+        },
+        {
+          displayName: "Model Name or ID",
+          name: "model",
+          type: "options",
+          typeOptions: {
+            loadOptionsMethod: "getModels",
           },
+          default: "",
+          description:
+            'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        },
+        {
+          displayName: "Research Task",
+          name: "researchTask",
+          type: "boolean",
+          default: false,
+          description: "Whether the AI can delegate complex research tasks to a specialized research agent for comprehensive, real-time information gathering",
+        },
+        {
+          displayName: "Smart List Management",
+          name: "lists",
+          type: "boolean",
+          default: false,
+          description: "Whether the AI can create, manage, and update Smart Lists on the platform",
+        },
+        {
+          displayName: "Temperature",
+          name: "temperature",
+          type: "number",
+          typeOptions: {
+            minValue: 0,
+            maxValue: 1,
+            numberPrecision: 1,
+          },
+          default: 0.7,
+          description: "Controls randomness (0 = deterministic, 1 = creative)",
+        },
+        {
+          displayName: "Use Company Context",
+          name: "company",
+          type: "boolean",
+          default: true,
+          description: "Whether to include company information in responses",
+        },
+        {
+          displayName: "Use Employee Persona",
+          name: "employee",
+          type: "boolean",
+          default: true,
+          description: "Whether to maintain the employee's persona in responses",
+        },
+        {
+          displayName: "Use Knowledge Base",
+          name: "documents",
+          type: "boolean",
+          default: true,
+          description: "Whether to access company knowledge base for information",
+        },
+        {
+          displayName: "Use Long-Term Memory",
+          name: "longTermMemories",
+          type: "boolean",
+          default: false,
+          description: "Whether to access information from past conversations",
+        },
+        {
+          displayName: "Use News",
+          name: "news",
+          type: "boolean",
+          default: false,
+          description: "Whether to allow searching news for recent information",
+        },
+        {
+          displayName: "Use Search Engine",
+          name: "searchEngine",
+          type: "boolean",
+          default: false,
+          description: "Whether to allow searching the web for information",
+        },
+        {
+          displayName: "Use Short-Term Memory",
+          name: "shortTermMemories",
+          type: "boolean",
+          default: true,
+          description: "Whether to recall information from the current conversation",
+        },
+        {
+          displayName: "Use Websites",
+          name: "websites",
+          type: "boolean",
+          default: false,
+          description: "Whether to allow accessing and reading websites",
+        },
+        {
+          displayName: "Zipcode",
+          name: "browserZipcode",
+          type: "string",
+          default: "",
+          placeholder: "e.g. 94102",
+          description: "5-digit US zipcode for residential proxy targeting",
+        },
         ],
-        default: "chat",
-        description: "Scope of memory to access for the conversation",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-            longTermMemories: [true],
-          },
-        },
       },
-      {
-        displayName: "Context Types",
-        name: "contextSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Company Context",
-        name: "company",
-        type: "boolean",
-        default: true,
-        description: "Whether to include company information in responses",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Use Employee Persona",
-        name: "employee",
-        type: "boolean",
-        default: true,
-        description: "Whether to maintain the employee's persona in responses",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Tools",
-        name: "toolsSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Smart List Management",
-        name: "lists",
-        type: "boolean",
-        default: false,
-        description: "Whether the AI can create, manage, and update Smart Lists on the platform",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Research Task",
-        name: "researchTask",
-        type: "boolean",
-        default: false,
-        description: "Whether the AI can delegate complex research tasks to a specialized research agent for comprehensive, real-time information gathering",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Create Documents",
-        name: "documentCreation",
-        type: "boolean",
-        default: false,
-        description: "Whether the AI can generate PDF, DOCX, or CSV files and email them to you",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Enable Browser Tasks",
-        name: "browserTaskEnabled",
-        type: "boolean",
-        default: false,
-        description: "Whether to allow the AI to control a web browser for automation tasks",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Browser Session Type",
-        name: "browserSessionType",
-        type: "options",
-        options: [
-          {
-            name: "No Session (Basic)",
-            value: "none",
-            description: "Use a standard browser session without authentication",
-          },
-          {
-            name: "Browser Session Integration",
-            value: "integration",
-            description: "Use an authenticated browser session from an integration",
-          },
-          {
-            name: "Residential Proxy",
-            value: "residential",
-            description: "Use a residential proxy with US zipcode targeting",
-          },
-        ],
-        default: "none",
-        description: "Type of browser session to use",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-            browserTaskEnabled: [true],
-          },
-        },
-      },
-      {
-        displayName: "Browser Integration Name or ID",
-        name: "browserIntegrationId",
-        type: "options",
-        default: "",
-        required: true,
-        description:
-          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-            browserTaskEnabled: [true],
-            browserSessionType: ["integration"],
-          },
-        },
-        typeOptions: {
-          loadOptionsMethod: "getBrowserIntegrations",
-        },
-        options: [],
-      },
-      {
-        displayName: "Zipcode",
-        name: "browserZipcode",
-        type: "string",
-        default: "",
-        required: true,
-        placeholder: "e.g. 94102",
-        description: "5-digit US zipcode for residential proxy targeting",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-            browserTaskEnabled: [true],
-            browserSessionType: ["residential"],
-          },
-        },
-      },
-      {
-        displayName: "Advanced Settings",
-        name: "advancedSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-      {
-        displayName: "Temperature",
-        name: "temperature",
-        type: "number",
-        typeOptions: {
-          minValue: 0,
-          maxValue: 1,
-          numberPrecision: 1,
-        },
-        default: 0.7,
-        description: "Controls randomness (0 = deterministic, 1 = creative)",
-        displayOptions: {
-          show: {
-            resource: ["employee"],
-            operation: ["chat"],
-          },
-        },
-      },
-
       // LIST PARAMETERS
       // LIST: GET ALL parameters
       {
-        displayName: "Pagination",
-        name: "paginationSection",
-        type: "notice",
-        default: "",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["list"],
             operation: ["getAll"],
           },
         },
-      },
-      {
-        displayName: "Page",
-        name: "page",
-        type: "number",
-        default: 1,
-        description: "Page number to retrieve",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["getAll"],
-          },
+        options: [
+        {
+          displayName: "Page",
+          name: "page",
+          type: "number",
+          default: 1,
+          description: "Page number to retrieve",
         },
-      },
-      {
-        displayName: "Page Size",
-        name: "pageSize",
-        type: "number",
-        default: 20,
-        description: "Number of lists per page",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["getAll"],
-          },
+        {
+          displayName: "Page Size",
+          name: "pageSize",
+          type: "number",
+          default: 20,
+          description: "Number of lists per page",
         },
+        ],
       },
 
       // LIST: GET parameters
@@ -1188,30 +1036,33 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Page",
-        name: "page",
-        type: "number",
-        default: 1,
-        description: "Page number to retrieve",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["list"],
             operation: ["get"],
           },
         },
-      },
-      {
-        displayName: "Page Size",
-        name: "pageSize",
-        type: "number",
-        default: 20,
-        description: "Number of rows per page",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["get"],
-          },
+        options: [
+        {
+          displayName: "Page",
+          name: "page",
+          type: "number",
+          default: 1,
+          description: "Page number to retrieve",
         },
+        {
+          displayName: "Page Size",
+          name: "pageSize",
+          type: "number",
+          default: 20,
+          description: "Number of rows per page",
+        },
+        ],
       },
 
       // LIST: CREATE parameters
@@ -1230,20 +1081,29 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Description",
-        name: "description",
-        type: "string",
-        typeOptions: {
-          alwaysOpenEditWindow: true,
-        },
-        default: "",
-        description: "Description of the list (optional)",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["list"],
             operation: ["create"],
           },
         },
+        options: [
+        {
+          displayName: "Description",
+          name: "description",
+          type: "string",
+          typeOptions: {
+            alwaysOpenEditWindow: true,
+          },
+          default: "",
+          description: "Description of the list (optional)",
+        },
+        ],
       },
 
       // LIST: ADD COLUMN parameters
@@ -1261,46 +1121,36 @@ export class ParallelAi implements INodeType {
           },
         },
       },
-
       // LIST: ADD ROWS parameters
       {
-        displayName: "Add Rows Options",
-        name: "addRowsOptions",
-        type: "notice",
-        default: "",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["list"],
             operation: ["addRows"],
           },
         },
-      },
-      {
-        displayName: "Create Columns",
-        name: "createColumnsAdd",
-        type: "boolean",
-        default: true,
-        description: "Whether to create columns that don't exist",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["addRows"],
-          },
+        options: [
+        {
+          displayName: "Create Columns",
+          name: "createColumnsAdd",
+          type: "boolean",
+          default: true,
+          description: "Whether to create columns that don't exist",
         },
-      },
-      {
-        displayName: "Match Fields",
-        name: "matchFieldsAdd",
-        type: "string",
-        default: "",
-        description: "Comma-separated field names to match existing rows (leave empty to always create new rows)",
-        placeholder: "email,phone",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["addRows"],
-          },
+        {
+          displayName: "Match Fields",
+          name: "matchFieldsAdd",
+          type: "string",
+          default: "",
+          description: "Comma-separated field names to match existing rows (leave empty to always create new rows)",
+          placeholder: "email,phone",
         },
+        ],
       },
       {
         displayName: "Row Data",
@@ -1320,46 +1170,36 @@ export class ParallelAi implements INodeType {
           },
         },
       },
-
       // LIST: UPDATE ROWS parameters
       {
-        displayName: "Update Rows Options",
-        name: "updateRowsOptions",
-        type: "notice",
-        default: "",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["list"],
             operation: ["updateRows"],
           },
         },
-      },
-      {
-        displayName: "Create Columns",
-        name: "createColumnsUpdate",
-        type: "boolean",
-        default: false,
-        description: "Whether to create columns that don't exist",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["updateRows"],
-          },
+        options: [
+        {
+          displayName: "Create Columns",
+          name: "createColumnsUpdate",
+          type: "boolean",
+          default: false,
+          description: "Whether to create columns that don't exist",
         },
-      },
-      {
-        displayName: "Match Fields",
-        name: "matchFieldsUpdate",
-        type: "string",
-        default: "",
-        description: "Comma-separated field names to match existing rows (leave empty to use row ID)",
-        placeholder: "email,phone",
-        displayOptions: {
-          show: {
-            resource: ["list"],
-            operation: ["updateRows"],
-          },
+        {
+          displayName: "Match Fields",
+          name: "matchFieldsUpdate",
+          type: "string",
+          default: "",
+          description: "Comma-separated field names to match existing rows (leave empty to use row ID)",
+          placeholder: "email,phone",
         },
+        ],
       },
       {
         displayName: "Row Data",
@@ -1413,17 +1253,26 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Include Content",
-        name: "includeContent",
-        type: "boolean",
-        default: false,
-        description: "Whether to include the document content in the response",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["document"],
             operation: ["get"],
           },
         },
+        options: [
+        {
+          displayName: "Include Content",
+          name: "includeContent",
+          type: "boolean",
+          default: false,
+          description: "Whether to include the document content in the response",
+        },
+        ],
       },
 
       // DOCUMENT: CREATE parameters
@@ -1439,7 +1288,7 @@ export class ParallelAi implements INodeType {
           {
             name: "File Upload",
             value: "file"
-          }
+          },
         ],
         default: "text",
         required: true,
@@ -1500,45 +1349,63 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Document Path",
-        name: "path",
-        type: "string",
-        default: "/",
-        description: "Path where the document should be stored",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["document"],
             operation: ["create"],
           },
         },
-      },
-      {
-        displayName: "Tags",
-        name: "tags",
-        type: "string",
-        default: "",
-        description: "Comma-separated list of tags to assign to the document",
-        displayOptions: {
-          show: {
-            resource: ["document"],
-            operation: ["create", "update"],
-          },
+        options: [
+        {
+          displayName: "Document Path",
+          name: "path",
+          type: "string",
+          default: "/",
+          description: "Path where the document should be stored",
         },
+        {
+          displayName: "Tags",
+          name: "tags",
+          type: "string",
+          default: "",
+          description: "Comma-separated list of tags to assign to the document",
+        },
+        ],
       },
-
       // DOCUMENT: UPDATE parameters
       {
-        displayName: "Document Name",
-        name: "name",
-        type: "string",
-        default: "",
-        description: "New name for the document (leave empty to keep current name)",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["document"],
             operation: ["update"],
           },
         },
+        options: [
+        {
+          displayName: "Document Name",
+          name: "name",
+          type: "string",
+          default: "",
+          description: "New name for the document (leave empty to keep current name)",
+        },
+        {
+          displayName: "Tags",
+          name: "tags",
+          type: "string",
+          default: "",
+          description: "Comma-separated list of tags to assign to the document",
+        },
+        ],
       },
 
       // DOCUMENT: SEARCH parameters
@@ -1614,39 +1481,80 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Minimum Score",
-        name: "minScore",
-        type: "number",
-        typeOptions: {
-          minValue: 0,
-          maxValue: 1,
-          numberPrecision: 2,
-        },
-        default: 0.5,
-        description: "Minimum similarity score threshold (0-1)",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
-            resource: ["document", "knowledgeBase"],
+            resource: ["document"],
             operation: ["search"],
           },
         },
+        options: [
+        {
+          displayName: "Maximum Results",
+          name: "topK",
+          type: "number",
+          typeOptions: {
+            minValue: 1,
+            maxValue: 100,
+          },
+          default: 10,
+          description: "Maximum number of results to return",
+        },
+        {
+          displayName: "Minimum Score",
+          name: "minScore",
+          type: "number",
+          typeOptions: {
+            minValue: 0,
+            maxValue: 1,
+            numberPrecision: 2,
+          },
+          default: 0.5,
+          description: "Minimum similarity score threshold (0-1)",
+        },
+        ],
       },
       {
-        displayName: "Maximum Results",
-        name: "topK",
-        type: "number",
-        typeOptions: {
-          minValue: 1,
-          maxValue: 100,
-        },
-        default: 10,
-        description: "Maximum number of results to return",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
-            resource: ["document", "knowledgeBase"],
+            resource: ["knowledgeBase"],
             operation: ["search"],
           },
         },
+        options: [
+        {
+          displayName: "Maximum Results",
+          name: "topK",
+          type: "number",
+          typeOptions: {
+            minValue: 1,
+            maxValue: 100,
+          },
+          default: 10,
+          description: "Maximum number of results to return",
+        },
+        {
+          displayName: "Minimum Score",
+          name: "minScore",
+          type: "number",
+          typeOptions: {
+            minValue: 0,
+            maxValue: 1,
+            numberPrecision: 2,
+          },
+          default: 0.5,
+          description: "Minimum similarity score threshold (0-1)",
+        },
+        ],
       },
       
       // DOCUMENT: MOVE parameters
@@ -1657,18 +1565,6 @@ export class ParallelAi implements INodeType {
         default: "",
         required: true,
         description: "ID of the document to move",
-        displayOptions: {
-          show: {
-            resource: ["document"],
-            operation: ["move"],
-          },
-        },
-      },
-      {
-        displayName: "Target Folder Information",
-        name: "folderSection",
-        type: "notice",
-        default: "",
         displayOptions: {
           show: {
             resource: ["document"],
@@ -1722,17 +1618,26 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Parent Path",
-        name: "path",
-        type: "string",
-        default: "/",
-        description: "Path where the folder should be created",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["folder"],
             operation: ["create"],
           },
         },
+        options: [
+        {
+          displayName: "Parent Path",
+          name: "path",
+          type: "string",
+          default: "/",
+          description: "Path where the folder should be created",
+        },
+        ],
       },
 
       // FOLDER: DELETE parameters
@@ -1751,58 +1656,86 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Delete Contents",
-        name: "deleteContents",
-        type: "boolean",
-        default: false,
-        description: "Whether to delete the folder contents or just move items to parent folder",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["folder"],
             operation: ["delete"],
           },
         },
+        options: [
+        {
+          displayName: "Delete Contents",
+          name: "deleteContents",
+          type: "boolean",
+          default: false,
+          description: "Whether to delete the folder contents or just move items to parent folder",
+        },
+        ],
       },
-
       // SEQUENCE PARAMETERS
       // SEQUENCE: GET ALL parameters
       {
-        displayName: "Pagination",
-        name: "sequencePaginationSection",
-        type: "notice",
-        default: "",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["sequence"],
             operation: ["getAll"],
           },
         },
+        options: [
+        {
+          displayName: "Page",
+          name: "page",
+          type: "number",
+          default: 1,
+          description: "Page number to retrieve",
+        },
+        {
+          displayName: "Page Size",
+          name: "pageSize",
+          type: "number",
+          default: 20,
+          description: "Number of items per page",
+        },
+        ],
       },
       {
-        displayName: "Page",
-        name: "page",
-        type: "number",
-        default: 1,
-        description: "Page number to retrieve",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["sequence"],
-            operation: ["getAll", "getMembers"],
+            operation: ["getMembers"],
           },
         },
-      },
-      {
-        displayName: "Page Size",
-        name: "pageSize",
-        type: "number",
-        default: 20,
-        description: "Number of items per page",
-        displayOptions: {
-          show: {
-            resource: ["sequence"],
-            operation: ["getAll", "getMembers"],
-          },
+        options: [
+        {
+          displayName: "Page",
+          name: "page",
+          type: "number",
+          default: 1,
+          description: "Page number to retrieve",
         },
+        {
+          displayName: "Page Size",
+          name: "pageSize",
+          type: "number",
+          default: 20,
+          description: "Number of items per page",
+        },
+        ],
       },
 
       // SEQUENCE: GET MEMBERS parameters
@@ -1852,46 +1785,43 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Last Name",
-        name: "lastName",
-        type: "string",
-        default: "",
-        description: "Last name of the member",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["sequence"],
             operation: ["addMember"],
           },
         },
-      },
-      {
-        displayName: "Phone",
-        name: "phone",
-        type: "string",
-        default: "",
-        description: "Phone number of the member",
-        displayOptions: {
-          show: {
-            resource: ["sequence"],
-            operation: ["addMember"],
+        options: [
+        {
+          displayName: "Last Name",
+          name: "lastName",
+          type: "string",
+          default: "",
+          description: "Last name of the member",
+        },
+        {
+          displayName: "Phone",
+          name: "phone",
+          type: "string",
+          default: "",
+          description: "Phone number of the member",
+        },
+        {
+          displayName: "User Data",
+          name: "userData",
+          type: "json",
+          typeOptions: {
+            alwaysOpenEditWindow: true,
           },
+          default: "{}",
+          description: "Additional user data for the sequence in JSON format",
         },
-      },
-      {
-        displayName: "User Data",
-        name: "userData",
-        type: "json",
-        typeOptions: {
-          alwaysOpenEditWindow: true,
-        },
-        default: "{}",
-        description: "Additional user data for the sequence in JSON format",
-        displayOptions: {
-          show: {
-            resource: ["sequence"],
-            operation: ["addMember"],
-          },
-        },
+        ],
       },
 
       // SEQUENCE: REMOVE MEMBER parameters
@@ -1946,210 +1876,125 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Reference Images (Optional)",
-        name: "referenceImagesSection",
-        type: "notice",
-        default: "",
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["image"],
             operation: ["generate"],
           },
         },
-      },
-      {
-        displayName: "Reference Image IDs",
-        name: "referenceImageIds",
-        type: "string",
-        default: "",
-        placeholder: "image-ID-1,image-ID-2",
-        description: "Comma-separated list of image IDs to use as reference (for models that support image references)",
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Reference Image URLs",
-        name: "referenceImageUrls",
-        type: "string",
-        typeOptions: {
-          alwaysOpenEditWindow: true,
-        },
-        default: "",
-        placeholder: "https://example.com/image1.jpg,https://example.com/image2.jpg",
-        description: "Comma-separated list of image URLs to use as reference (for models that support image references)",
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "GPT Image Options",
-        name: "gptImageOptionsSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: ["gpt-image-1"],
-          },
-        },
-      },
-      {
-        displayName: "Size",
-        name: "imageSize",
-        type: "options",
-        default: "1024x1024",
-        description: "Size of the generated image",
         options: [
-          {
-            name: "Square (1024x1024)",
-            value: "1024x1024",
+        {
+          displayName: "Height",
+          name: "imageHeight",
+          type: "number",
+          default: 512,
+          description: "Height of the generated image",
+          typeOptions: {
+            minValue: 32,
+            maxValue: 1536,
           },
-          {
-            name: "Landscape (1792x1024)",
-            value: "1792x1024",
+        },
+        {
+          displayName: "Quality",
+          name: "imageQuality",
+          type: "options",
+          default: "auto",
+          description: "Quality of the generated image",
+          options: [
+            {
+              name: "Low",
+              value: "low",
+            },
+            {
+              name: "Medium",
+              value: "medium",
+            },
+            {
+              name: "High",
+              value: "high",
+            },
+            {
+              name: "Auto",
+              value: "auto",
+            },
+          ],
+        },
+        {
+          displayName: "Reference Image IDs",
+          name: "referenceImageIds",
+          type: "string",
+          default: "",
+          placeholder: "image-ID-1,image-ID-2",
+          description: "Comma-separated list of image IDs to use as reference (for models that support image references)",
+        },
+        {
+          displayName: "Reference Image URLs",
+          name: "referenceImageUrls",
+          type: "string",
+          typeOptions: {
+            alwaysOpenEditWindow: true,
           },
-          {
-            name: "Portrait (1024x1792)",
-            value: "1024x1792",
+          default: "",
+          placeholder: "https://example.com/image1.jpg,https://example.com/image2.jpg",
+          description: "Comma-separated list of image URLs to use as reference (for models that support image references)",
+        },
+        {
+          displayName: "Size",
+          name: "imageSize",
+          type: "options",
+          default: "1024x1024",
+          description: "Size of the generated image",
+          options: [
+            {
+              name: "Square (1024x1024)",
+              value: "1024x1024",
+            },
+            {
+              name: "Landscape (1792x1024)",
+              value: "1792x1024",
+            },
+            {
+              name: "Portrait (1024x1792)",
+              value: "1024x1792",
+            },
+          ],
+        },
+        {
+          displayName: "Style",
+          name: "imageStyle",
+          type: "options",
+          default: "vivid",
+          description: "Style of the generated image",
+          options: [
+            {
+              name: "Vivid",
+              value: "vivid",
+              description: "Hyper-real and dramatic images",
+            },
+            {
+              name: "Natural",
+              value: "natural",
+              description: "More natural and less hyper-real images",
+            },
+          ],
+        },
+        {
+          displayName: "Width",
+          name: "imageWidth",
+          type: "number",
+          default: 512,
+          description: "Width of the generated image",
+          typeOptions: {
+            minValue: 32,
+            maxValue: 1536,
           },
+        },
         ],
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: ["gpt-image-1"],
-          },
-        },
-      },
-      {
-        displayName: "Quality",
-        name: "imageQuality",
-        type: "options",
-        default: "auto",
-        description: "Quality of the generated image",
-        options: [
-          {
-            name: "Low",
-            value: "low",
-          },
-          {
-            name: "Medium",
-            value: "medium",
-          },
-          {
-            name: "High",
-            value: "high",
-          },
-          {
-            name: "Auto",
-            value: "auto",
-          },
-        ],
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: ["gpt-image-1"],
-          },
-        },
-      },
-      {
-        displayName: "Style",
-        name: "imageStyle",
-        type: "options",
-        default: "vivid",
-        description: "Style of the generated image",
-        options: [
-          {
-            name: "Vivid",
-            value: "vivid",
-            description: "Hyper-real and dramatic images",
-          },
-          {
-            name: "Natural",
-            value: "natural",
-            description: "More natural and less hyper-real images",
-          },
-        ],
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: ["gpt-image-1"],
-          },
-        },
-      },
-      {
-        displayName: "Leonardo Options",
-        name: "leonardoOptionsSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: [
-              "b24e16ff-06e3-43eb-8d33-4416c2d75876",
-              "1dd50843-d653-4516-a8e3-f0238ee453ff",
-              "de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3",
-              "aa77f04e-3eec-4034-9c07-d0f619684628",
-            ],
-          },
-        },
-      },
-      {
-        displayName: "Width",
-        name: "imageWidth",
-        type: "number",
-        default: 512,
-        description: "Width of the generated image",
-        typeOptions: {
-          minValue: 32,
-          maxValue: 1536,
-        },
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: [
-              "b24e16ff-06e3-43eb-8d33-4416c2d75876",
-              "1dd50843-d653-4516-a8e3-f0238ee453ff",
-              "de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3",
-              "aa77f04e-3eec-4034-9c07-d0f619684628",
-            ],
-          },
-        },
-      },
-      {
-        displayName: "Height",
-        name: "imageHeight",
-        type: "number",
-        default: 512,
-        description: "Height of the generated image",
-        typeOptions: {
-          minValue: 32,
-          maxValue: 1536,
-        },
-        displayOptions: {
-          show: {
-            resource: ["image"],
-            operation: ["generate"],
-            imageModel: [
-              "b24e16ff-06e3-43eb-8d33-4416c2d75876",
-              "1dd50843-d653-4516-a8e3-f0238ee453ff",
-              "de7d3faf-762f-48e0-b3b7-9d0ac3a3fcf3",
-              "aa77f04e-3eec-4034-9c07-d0f619684628",
-            ],
-          },
-        },
       },
 
       // VIDEO PARAMETERS
@@ -2189,280 +2034,187 @@ export class ParallelAi implements INodeType {
         },
       },
       {
-        displayName: "Duration (Seconds)",
-        name: "videoDuration",
-        type: "number",
-        default: 5,
-        description: "Duration of the video in seconds",
-        typeOptions: {
-          minValue: 2,
-          maxValue: 20,
-        },
+        displayName: "Additional Fields",
+        name: "additionalFields",
+        type: "collection",
+        placeholder: "Add Field",
+        default: {},
         displayOptions: {
           show: {
             resource: ["video"],
             operation: ["generate"],
           },
         },
-      },
-      {
-        displayName: "Aspect Ratio",
-        name: "videoAspectRatio",
-        type: "options",
         options: [
-          {
-            name: "16:9 (Landscape)",
-            value: "16:9",
+        {
+          displayName: "Aspect Ratio",
+          name: "videoAspectRatio",
+          type: "options",
+          options: [
+            {
+              name: "16:9 (Landscape)",
+              value: "16:9",
+            },
+            {
+              name: "9:16 (Portrait)",
+              value: "9:16",
+            },
+            {
+              name: "1:1 (Square)",
+              value: "1:1",
+            },
+          ],
+          default: "16:9",
+          description: "Aspect ratio of the video",
+        },
+        {
+          displayName: "Camera Motion",
+          name: "cameraMotion",
+          type: "options",
+          options: [
+            {
+              name: "Static",
+              value: "static",
+            },
+            {
+              name: "Pan",
+              value: "pan",
+            },
+            {
+              name: "Zoom",
+              value: "zoom",
+            },
+            {
+              name: "Dolly",
+              value: "dolly",
+            },
+          ],
+          default: "static",
+          description: "Type of camera motion (for Kling models)",
+        },
+        {
+          displayName: "Duration (Seconds)",
+          name: "videoDuration",
+          type: "number",
+          default: 5,
+          description: "Duration of the video in seconds",
+          typeOptions: {
+            minValue: 2,
+            maxValue: 20,
           },
-          {
-            name: "9:16 (Portrait)",
-            value: "9:16",
-          },
-          {
-            name: "1:1 (Square)",
-            value: "1:1",
-          },
+        },
+        {
+          displayName: "First Frame ID",
+          name: "firstFrameId",
+          type: "string",
+          default: "",
+          placeholder: "image-ID-123",
+          description: "ID of the first frame image from your library",
+        },
+        {
+          displayName: "First Frame URL",
+          name: "firstFrameUrl",
+          type: "string",
+          default: "",
+          placeholder: "https://example.com/first-frame.jpg",
+          description: "URL of the first frame image (for first-last-frame models)",
+        },
+        {
+          displayName: "Last Frame ID",
+          name: "lastFrameId",
+          type: "string",
+          default: "",
+          placeholder: "image-ID-456",
+          description: "ID of the last frame image from your library",
+        },
+        {
+          displayName: "Last Frame URL",
+          name: "lastFrameUrl",
+          type: "string",
+          default: "",
+          placeholder: "https://example.com/last-frame.jpg",
+          description: "URL of the last frame image (for first-last-frame models)",
+        },
+        {
+          displayName: "Motion Intensity",
+          name: "motionIntensity",
+          type: "options",
+          options: [
+            {
+              name: "Low",
+              value: "low",
+            },
+            {
+              name: "Medium",
+              value: "medium",
+            },
+            {
+              name: "High",
+              value: "high",
+            },
+          ],
+          default: "medium",
+          description: "Intensity of motion in the video (for Kling models)",
+        },
+        {
+          displayName: "Resolution",
+          name: "videoResolution",
+          type: "options",
+          options: [
+            {
+              name: "720p (1280x720)",
+              value: "720p",
+            },
+            {
+              name: "1080p (1920x1080)",
+              value: "1080p",
+            },
+          ],
+          default: "1080p",
+          description: "Video resolution (for Sora 2 Pro)",
+        },
+        {
+          displayName: "Source Image ID",
+          name: "imageId",
+          type: "string",
+          default: "",
+          placeholder: "image-ID-789",
+          description: "ID of the source image from your library to animate",
+        },
+        {
+          displayName: "Source Image URL",
+          name: "imageUrl",
+          type: "string",
+          default: "",
+          placeholder: "https://example.com/source-image.jpg",
+          description: "URL of the source image to animate (for image-to-video models)",
+        },
+        {
+          displayName: "Style",
+          name: "videoStyle",
+          type: "options",
+          options: [
+            {
+              name: "Realistic",
+              value: "realistic",
+            },
+            {
+              name: "Cinematic",
+              value: "cinematic",
+            },
+            {
+              name: "Animated",
+              value: "animated",
+            },
+            {
+              name: "Artistic",
+              value: "artistic",
+            },
+          ],
+          default: "realistic",
+          description: "Visual style of the video (for Kling models)",
+        },
         ],
-        default: "16:9",
-        description: "Aspect ratio of the video",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Frame Images (Optional)",
-        name: "frameImagesSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "First Frame URL",
-        name: "firstFrameUrl",
-        type: "string",
-        default: "",
-        placeholder: "https://example.com/first-frame.jpg",
-        description: "URL of the first frame image (for first-last-frame models)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "First Frame ID",
-        name: "firstFrameId",
-        type: "string",
-        default: "",
-        placeholder: "image-ID-123",
-        description: "ID of the first frame image from your library",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Last Frame URL",
-        name: "lastFrameUrl",
-        type: "string",
-        default: "",
-        placeholder: "https://example.com/last-frame.jpg",
-        description: "URL of the last frame image (for first-last-frame models)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Last Frame ID",
-        name: "lastFrameId",
-        type: "string",
-        default: "",
-        placeholder: "image-ID-456",
-        description: "ID of the last frame image from your library",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Image to Video (Optional)",
-        name: "imageToVideoSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Source Image URL",
-        name: "imageUrl",
-        type: "string",
-        default: "",
-        placeholder: "https://example.com/source-image.jpg",
-        description: "URL of the source image to animate (for image-to-video models)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Source Image ID",
-        name: "imageId",
-        type: "string",
-        default: "",
-        placeholder: "image-ID-789",
-        description: "ID of the source image from your library to animate",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Advanced Options",
-        name: "videoAdvancedSection",
-        type: "notice",
-        default: "",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Resolution",
-        name: "videoResolution",
-        type: "options",
-        options: [
-          {
-            name: "720p (1280x720)",
-            value: "720p",
-          },
-          {
-            name: "1080p (1920x1080)",
-            value: "1080p",
-          },
-        ],
-        default: "1080p",
-        description: "Video resolution (for Sora 2 Pro)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Motion Intensity",
-        name: "motionIntensity",
-        type: "options",
-        options: [
-          {
-            name: "Low",
-            value: "low",
-          },
-          {
-            name: "Medium",
-            value: "medium",
-          },
-          {
-            name: "High",
-            value: "high",
-          },
-        ],
-        default: "medium",
-        description: "Intensity of motion in the video (for Kling models)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Camera Motion",
-        name: "cameraMotion",
-        type: "options",
-        options: [
-          {
-            name: "Static",
-            value: "static",
-          },
-          {
-            name: "Pan",
-            value: "pan",
-          },
-          {
-            name: "Zoom",
-            value: "zoom",
-          },
-          {
-            name: "Dolly",
-            value: "dolly",
-          },
-        ],
-        default: "static",
-        description: "Type of camera motion (for Kling models)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
-      },
-      {
-        displayName: "Style",
-        name: "videoStyle",
-        type: "options",
-        options: [
-          {
-            name: "Realistic",
-            value: "realistic",
-          },
-          {
-            name: "Cinematic",
-            value: "cinematic",
-          },
-          {
-            name: "Animated",
-            value: "animated",
-          },
-          {
-            name: "Artistic",
-            value: "artistic",
-          },
-        ],
-        default: "realistic",
-        description: "Visual style of the video (for Kling models)",
-        displayOptions: {
-          show: {
-            resource: ["video"],
-            operation: ["generate"],
-          },
-        },
       },
 
       // VIDEO: GET STATUS parameters
@@ -2596,16 +2348,12 @@ export class ParallelAi implements INodeType {
       async getBrowserIntegrations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const credentials = await this.getCredentials("parallelAiApi");
         const baseUrl = credentials.baseUrl as string;
-        const apiKey = credentials.apiKey as string;
 
         try {
           const options = {
             method: "GET" as "GET",
             url: `${baseUrl}/api/v0/browser-integrations`,
             json: true,
-            headers: {
-              "X-API-KEY": apiKey,
-            },
           };
 
           const response = await this.helpers.httpRequestWithAuthentication.call(this, "parallelAiApi", options);
@@ -2640,7 +2388,6 @@ export class ParallelAi implements INodeType {
       async getEmployees(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const credentials = await this.getCredentials("parallelAiApi");
         const baseUrl = credentials.baseUrl as string;
-        const apiKey = credentials.apiKey as string;
 
         try {
           // Request options to fetch employees from the API
@@ -2648,9 +2395,6 @@ export class ParallelAi implements INodeType {
             method: "GET" as "GET",
             url: `${baseUrl}/api/v0/employees`,
             json: true,
-            headers: {
-              "X-API-KEY": apiKey,
-            },
           };
 
           // Make the request to fetch employees
@@ -2683,7 +2427,6 @@ export class ParallelAi implements INodeType {
       async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const credentials = await this.getCredentials("parallelAiApi");
         const baseUrl = credentials.baseUrl as string;
-        const apiKey = credentials.apiKey as string;
 
         try {
           // Request options to fetch models from the API
@@ -2691,9 +2434,6 @@ export class ParallelAi implements INodeType {
             method: "GET" as "GET",
             url: `${baseUrl}/api/v0/models`,
             json: true,
-            headers: {
-              "X-API-KEY": apiKey,
-            },
           };
 
           // Make the request to fetch models
@@ -2757,7 +2497,6 @@ export class ParallelAi implements INodeType {
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const credentials = await this.getCredentials("parallelAiApi");
-    const apiKey = credentials.apiKey as string;
     const baseUrl = credentials.baseUrl as string;
 
     const resource = this.getNodeParameter("resource", 0) as string;
@@ -2766,7 +2505,7 @@ export class ParallelAi implements INodeType {
     // API RESOURCE (spec-driven, processed per input item)
     if (resource === "api") {
       const returnData = await executeApiOperation.call(this);
-      return [returnData, returnData];
+      return [returnData];
     }
 
     let responseData;
@@ -2776,9 +2515,6 @@ export class ParallelAi implements INodeType {
       // Get all employees
       if (operation === "getAll") {
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/employees`,
           json: true,
@@ -2790,39 +2526,40 @@ export class ParallelAi implements INodeType {
       else if (operation === "chat") {
         const employeeId = this.getNodeParameter("employeeId", 0) as string;
         const message = this.getNodeParameter("message", 0) as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
 
         // Get all context settings from the node parameters
-        const model = this.getNodeParameter("model", 0) as string;
-        const documents = this.getNodeParameter("documents", 0) as boolean;
-        const searchEngine = this.getNodeParameter("searchEngine", 0) as boolean;
-        const websites = this.getNodeParameter("websites", 0) as boolean;
-        const news = this.getNodeParameter("news", 0) as boolean;
-        const shortTermMemories = this.getNodeParameter("shortTermMemories", 0) as boolean;
-        const longTermMemories = this.getNodeParameter("longTermMemories", 0) as boolean;
-        const memoryScope = longTermMemories ? (this.getNodeParameter("memoryScope", 0) as string) : "chat";
-        const company = this.getNodeParameter("company", 0) as boolean;
-        const employee = this.getNodeParameter("employee", 0) as boolean;
-        const temperature = this.getNodeParameter("temperature", 0) as number;
+        const model = (additionalFields.model as string) ?? "";
+        const documents = (additionalFields.documents as boolean) ?? true;
+        const searchEngine = (additionalFields.searchEngine as boolean) ?? false;
+        const websites = (additionalFields.websites as boolean) ?? false;
+        const news = (additionalFields.news as boolean) ?? false;
+        const shortTermMemories = (additionalFields.shortTermMemories as boolean) ?? true;
+        const longTermMemories = (additionalFields.longTermMemories as boolean) ?? false;
+        const memoryScope = (additionalFields.memoryScope as string) ?? "chat";
+        const company = (additionalFields.company as boolean) ?? true;
+        const employee = (additionalFields.employee as boolean) ?? true;
+        const temperature = (additionalFields.temperature as number) ?? 0.7;
 
         // Get tool settings
-        const lists = this.getNodeParameter("lists", 0, false) as boolean;
-        const researchTask = this.getNodeParameter("researchTask", 0, false) as boolean;
-        const documentCreation = this.getNodeParameter("documentCreation", 0, false) as boolean;
+        const lists = (additionalFields.lists as boolean) ?? false;
+        const researchTask = (additionalFields.researchTask as boolean) ?? false;
+        const documentCreation = (additionalFields.documentCreation as boolean) ?? false;
 
         // Get browser task settings
-        const browserTaskEnabled = this.getNodeParameter("browserTaskEnabled", 0, false) as boolean;
-        const browserSessionType = browserTaskEnabled ? (this.getNodeParameter("browserSessionType", 0, "none") as string) : "none";
+        const browserTaskEnabled = (additionalFields.browserTaskEnabled as boolean) ?? false;
+        const browserSessionType = browserTaskEnabled ? ((additionalFields.browserSessionType as string) ?? "none") : "none";
 
         // Get integration ID for integration sessions
         let browserIntegrationId: string | null = null;
         if (browserTaskEnabled && browserSessionType === "integration") {
-          browserIntegrationId = this.getNodeParameter("browserIntegrationId", 0, "") as string;
+          browserIntegrationId = (additionalFields.browserIntegrationId as string) ?? "";
         }
 
         // Get zipcode for residential proxy
         let browserZipcode: string | null = null;
         if (browserTaskEnabled && browserSessionType === "residential") {
-          browserZipcode = this.getNodeParameter("browserZipcode", 0, "") as string;
+          browserZipcode = (additionalFields.browserZipcode as string) ?? "";
         }
 
         // Construct browser task object matching backend expectations
@@ -2873,9 +2610,6 @@ export class ParallelAi implements INodeType {
 
         // Use async endpoint to start the chat
         const startOptions = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "POST" as "POST",
           url: `${baseUrl}/api/v0/employees/chat/async`,
           body,
@@ -2905,9 +2639,6 @@ export class ParallelAi implements INodeType {
           }
 
           const pollOptions = {
-            headers: {
-              "X-API-KEY": apiKey,
-            },
             method: "GET" as "GET",
             url: `${baseUrl}/api/v0/employees/chat/async/${chatId}`,
             json: true,
@@ -2947,13 +2678,11 @@ export class ParallelAi implements INodeType {
     else if (resource === "list") {
       // Get all lists
       if (operation === "getAll") {
-        const page = this.getNodeParameter("page", 0, 1) as number;
-        const pageSize = this.getNodeParameter("pageSize", 0, 20) as number;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const page = (additionalFields.page as number) ?? 1;
+        const pageSize = (additionalFields.pageSize as number) ?? 20;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/lists?page=${page}&pageSize=${pageSize}`,
           json: true,
@@ -2964,13 +2693,11 @@ export class ParallelAi implements INodeType {
       // Get a specific list
       else if (operation === "get") {
         const listId = this.getNodeParameter("listId", 0) as string;
-        const page = this.getNodeParameter("page", 0, 1) as number;
-        const pageSize = this.getNodeParameter("pageSize", 0, 20) as number;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const page = (additionalFields.page as number) ?? 1;
+        const pageSize = (additionalFields.pageSize as number) ?? 20;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/lists/${listId}?page=${page}&pageSize=${pageSize}`,
           json: true,
@@ -2981,7 +2708,8 @@ export class ParallelAi implements INodeType {
       // Create a new list
       else if (operation === "create") {
         const name = this.getNodeParameter("name", 0) as string;
-        const description = this.getNodeParameter("description", 0, "") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const description = (additionalFields.description as string) ?? "";
 
         const listDict = {
           name,
@@ -2994,7 +2722,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3016,7 +2743,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3030,8 +2756,9 @@ export class ParallelAi implements INodeType {
       // Add rows to a list
       else if (operation === "addRows") {
         const listId = this.getNodeParameter("listId", 0) as string;
-        const createColumns = this.getNodeParameter("createColumnsAdd", 0, true) as boolean;
-        const matchFields = this.getNodeParameter("matchFieldsAdd", 0, "") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const createColumns = (additionalFields.createColumnsAdd as boolean) ?? true;
+        const matchFields = (additionalFields.matchFieldsAdd as string) ?? "";
 
         // Get the row data as a JSON array of objects
         let rowDataStr = this.getNodeParameter("rowDataAdd", 0) as string;
@@ -3058,7 +2785,6 @@ export class ParallelAi implements INodeType {
         for (const row of rowData) {
           const options = {
             headers: {
-              "X-API-KEY": apiKey,
               "Content-Type": "application/json",
             },
             method: "POST" as "POST",
@@ -3083,8 +2809,9 @@ export class ParallelAi implements INodeType {
       // Update rows in a list
       else if (operation === "updateRows") {
         const listId = this.getNodeParameter("listId", 0) as string;
-        const createColumns = this.getNodeParameter("createColumnsUpdate", 0, false) as boolean;
-        const matchFields = this.getNodeParameter("matchFieldsUpdate", 0, "") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const createColumns = (additionalFields.createColumnsUpdate as boolean) ?? false;
+        const matchFields = (additionalFields.matchFieldsUpdate as string) ?? "";
 
         // Get the row data as a JSON array of objects
         let rowDataStr = this.getNodeParameter("rowDataUpdate", 0) as string;
@@ -3114,7 +2841,6 @@ export class ParallelAi implements INodeType {
           if (matchFields) {
             options = {
               headers: {
-                "X-API-KEY": apiKey,
                 "Content-Type": "application/json",
               },
               method: "POST" as "POST",
@@ -3125,7 +2851,6 @@ export class ParallelAi implements INodeType {
           } else {
             options = {
               headers: {
-                "X-API-KEY": apiKey,
                 "Content-Type": "application/json",
               },
               method: "PUT" as "PUT",
@@ -3157,9 +2882,6 @@ export class ParallelAi implements INodeType {
         const path = this.getNodeParameter("path", 0) as string;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/documents?path=${encodeURIComponent(path)}`,
           json: true,
@@ -3170,13 +2892,11 @@ export class ParallelAi implements INodeType {
       // Get a specific document
       else if (operation === "get") {
         const documentId = this.getNodeParameter("documentId", 0) as string;
-        const includeContent = this.getNodeParameter("includeContent", 0) as boolean;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const includeContent = (additionalFields.includeContent as boolean) ?? false;
 
         // First get document metadata
         const documentOptions = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/documents/${documentId}/details`,
           json: true,
@@ -3187,9 +2907,6 @@ export class ParallelAi implements INodeType {
         // If content is requested, get it separately
         if (includeContent) {
           const contentOptions = {
-            headers: {
-              "X-API-KEY": apiKey,
-            },
             method: "GET" as "GET",
             url: `${baseUrl}/api/v0/documents/${documentId}/content`,
             json: true,
@@ -3206,8 +2923,9 @@ export class ParallelAi implements INodeType {
       // Create a new document
       else if (operation === "create") {
         const documentType = this.getNodeParameter("documentType", 0) as string;
-        const path = this.getNodeParameter("path", 0, "/") as string;
-        const tagsString = this.getNodeParameter("tags", 0, "") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const path = (additionalFields.path as string) ?? "/";
+        const tagsString = (additionalFields.tags as string) ?? "";
         const tags = tagsString.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
 
         if (documentType === "text") {
@@ -3217,7 +2935,6 @@ export class ParallelAi implements INodeType {
 
           const options = {
             headers: {
-              "X-API-KEY": apiKey,
               "Content-Type": "application/json",
             },
             method: "POST" as "POST",
@@ -3252,9 +2969,6 @@ export class ParallelAi implements INodeType {
           formData.append("tags", tags.join(","));
 
           const options = {
-            headers: {
-              "X-API-KEY": apiKey,
-            },
             method: "POST" as "POST",
             url: `${baseUrl}/api/v0/documents/create`,
             body: formData,
@@ -3266,9 +2980,10 @@ export class ParallelAi implements INodeType {
       // Update a document
       else if (operation === "update") {
         const documentId = this.getNodeParameter("documentId", 0) as string;
-        const name = this.getNodeParameter("name", 0, "") as string;
         const content = this.getNodeParameter("content", 0) as string;
-        const tagsString = this.getNodeParameter("tags", 0, "") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const name = (additionalFields.name as string) ?? "";
+        const tagsString = (additionalFields.tags as string) ?? "";
 
         // Only include tags if provided
         const body: { content: string; name?: string; tags?: string[] } = { content };
@@ -3283,7 +2998,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "PUT" as "PUT",
@@ -3299,9 +3013,6 @@ export class ParallelAi implements INodeType {
         const documentId = this.getNodeParameter("documentId", 0) as string;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "DELETE" as "DELETE",
           url: `${baseUrl}/api/v0/documents/${documentId}`,
           json: true,
@@ -3317,7 +3028,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3338,9 +3048,10 @@ export class ParallelAi implements INodeType {
       else if (operation === "search") {
         const query = this.getNodeParameter("query", 0) as string;
         const documentScopeType = this.getNodeParameter("documentScopeType", 0) as string;
-        const minScore = this.getNodeParameter("minScore", 0) as number;
-        const topK = this.getNodeParameter("topK", 0) as number;
-        
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const minScore = (additionalFields.minScore as number) ?? 0.5;
+        const topK = (additionalFields.topK as number) ?? 10;
+
         // Prepare document scope object based on scope type
         let documentScope = {};
         
@@ -3365,7 +3076,6 @@ export class ParallelAi implements INodeType {
         
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3388,9 +3098,6 @@ export class ParallelAi implements INodeType {
       // Get all folders
       if (operation === "getAll") {
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/documents/folders`,
           json: true,
@@ -3401,11 +3108,11 @@ export class ParallelAi implements INodeType {
       // Create a new folder
       else if (operation === "create") {
         const name = this.getNodeParameter("name", 0) as string;
-        const path = this.getNodeParameter("path", 0, "/") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const path = (additionalFields.path as string) ?? "/";
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3422,12 +3129,10 @@ export class ParallelAi implements INodeType {
       // Delete a folder
       else if (operation === "delete") {
         const folderId = this.getNodeParameter("folderId", 0) as string;
-        const deleteContents = this.getNodeParameter("deleteContents", 0) as boolean;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const deleteContents = (additionalFields.deleteContents as boolean) ?? false;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "DELETE" as "DELETE",
           url: `${baseUrl}/api/v0/documents/folders/${folderId}?delete=${deleteContents}`,
           json: true,
@@ -3441,13 +3146,11 @@ export class ParallelAi implements INodeType {
     else if (resource === "sequence") {
       // Get all sequences
       if (operation === "getAll") {
-        const page = this.getNodeParameter("page", 0, 1) as number;
-        const pageSize = this.getNodeParameter("pageSize", 0, 20) as number;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const page = (additionalFields.page as number) ?? 1;
+        const pageSize = (additionalFields.pageSize as number) ?? 20;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/sequences?page=${page}&pageSize=${pageSize}`,
           json: true,
@@ -3458,13 +3161,11 @@ export class ParallelAi implements INodeType {
       // Get sequence members
       else if (operation === "getMembers") {
         const sequenceId = this.getNodeParameter("sequenceId", 0) as string;
-        const page = this.getNodeParameter("page", 0, 1) as number;
-        const pageSize = this.getNodeParameter("pageSize", 0, 20) as number;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const page = (additionalFields.page as number) ?? 1;
+        const pageSize = (additionalFields.pageSize as number) ?? 20;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/sequences/${sequenceId}/members?page=${page}&pageSize=${pageSize}`,
           json: true,
@@ -3477,12 +3178,13 @@ export class ParallelAi implements INodeType {
         const sequenceId = this.getNodeParameter("sequenceId", 0) as string;
         const email = this.getNodeParameter("email", 0) as string;
         const firstName = this.getNodeParameter("firstName", 0) as string;
-        const lastName = this.getNodeParameter("lastName", 0, "") as string;
-        const phone = this.getNodeParameter("phone", 0, "") as string;
-        
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const lastName = (additionalFields.lastName as string) ?? "";
+        const phone = (additionalFields.phone as string) ?? "";
+
         // Parse user data if provided
         let userData = {};
-        const userDataStr = this.getNodeParameter("userData", 0, "{}") as string;
+        const userDataStr = (additionalFields.userData as string) ?? "{}";
         
         try {
           if (typeof userDataStr === 'string') {
@@ -3496,7 +3198,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3519,9 +3220,6 @@ export class ParallelAi implements INodeType {
         const memberId = this.getNodeParameter("memberId", 0) as string;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "DELETE" as "DELETE",
           url: `${baseUrl}/api/v0/sequences/${sequenceId}/members/${memberId}`,
           json: true,
@@ -3536,7 +3234,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3555,6 +3252,7 @@ export class ParallelAi implements INodeType {
       if (operation === "generate") {
         const prompt = this.getNodeParameter("prompt", 0) as string;
         const model = this.getNodeParameter("imageModel", 0) as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
 
         // Prepare request body
         const body: Record<string, any> = {
@@ -3563,8 +3261,8 @@ export class ParallelAi implements INodeType {
         };
 
         // Handle reference images
-        const referenceImageIds = this.getNodeParameter("referenceImageIds", 0, "") as string;
-        const referenceImageUrls = this.getNodeParameter("referenceImageUrls", 0, "") as string;
+        const referenceImageIds = (additionalFields.referenceImageIds as string) ?? "";
+        const referenceImageUrls = (additionalFields.referenceImageUrls as string) ?? "";
 
         const referenceImages: any[] = [];
 
@@ -3586,20 +3284,19 @@ export class ParallelAi implements INodeType {
 
         // Add model-specific parameters
         if (model === "gpt-image-1") {
-          body.size = this.getNodeParameter("imageSize", 0) as string;
-          body.quality = this.getNodeParameter("imageQuality", 0) as string;
-          body.style = this.getNodeParameter("imageStyle", 0) as string;
+          body.size = (additionalFields.imageSize as string) ?? "1024x1024";
+          body.quality = (additionalFields.imageQuality as string) ?? "auto";
+          body.style = (additionalFields.imageStyle as string) ?? "vivid";
         } else {
           // Leonardo, Google, and other models use width/height
-          body.width = this.getNodeParameter("imageWidth", 0, 512) as number;
-          body.height = this.getNodeParameter("imageHeight", 0, 512) as number;
+          body.width = (additionalFields.imageWidth as number) ?? 512;
+          body.height = (additionalFields.imageHeight as number) ?? 512;
         }
 
         // Make the API request
         const options = {
           headers: {
             "Content-Type": "application/json",
-            "X-API-KEY": apiKey,
           },
           method: "POST" as "POST",
           url: `${baseUrl}/api/v0/images/generate`,
@@ -3612,9 +3309,6 @@ export class ParallelAi implements INodeType {
       // Get available image models
       else if (operation === "getModels") {
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/images/models`,
           json: true,
@@ -3630,8 +3324,9 @@ export class ParallelAi implements INodeType {
       if (operation === "generate") {
         const prompt = this.getNodeParameter("videoPrompt", 0) as string;
         const model = this.getNodeParameter("videoModel", 0) as string;
-        const duration = this.getNodeParameter("videoDuration", 0, 5) as number;
-        const resolution = this.getNodeParameter("videoResolution", 0, "1080p") as string;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const duration = (additionalFields.videoDuration as number) ?? 5;
+        const resolution = (additionalFields.videoResolution as string) ?? "1080p";
 
         // Prepare request body with required parameters
         const body: Record<string, any> = {
@@ -3642,16 +3337,16 @@ export class ParallelAi implements INodeType {
         };
 
         // Add optional aspect_ratio parameter (passed through **kwargs)
-        const aspectRatio = this.getNodeParameter("videoAspectRatio", 0, "") as string;
+        const aspectRatio = (additionalFields.videoAspectRatio as string) ?? "";
         if (aspectRatio) {
           body.aspect_ratio = aspectRatio;
         }
 
         // Add frame images for first-last-frame models
-        const firstFrameUrl = this.getNodeParameter("firstFrameUrl", 0, "") as string;
-        const firstFrameId = this.getNodeParameter("firstFrameId", 0, "") as string;
-        const lastFrameUrl = this.getNodeParameter("lastFrameUrl", 0, "") as string;
-        const lastFrameId = this.getNodeParameter("lastFrameId", 0, "") as string;
+        const firstFrameUrl = (additionalFields.firstFrameUrl as string) ?? "";
+        const firstFrameId = (additionalFields.firstFrameId as string) ?? "";
+        const lastFrameUrl = (additionalFields.lastFrameUrl as string) ?? "";
+        const lastFrameId = (additionalFields.lastFrameId as string) ?? "";
 
         if (firstFrameUrl) body.first_frame_url = firstFrameUrl;
         if (firstFrameId) body.first_frame_id = firstFrameId;
@@ -3659,16 +3354,16 @@ export class ParallelAi implements INodeType {
         if (lastFrameId) body.last_frame_id = lastFrameId;
 
         // Add image for image-to-video models
-        const imageUrl = this.getNodeParameter("imageUrl", 0, "") as string;
-        const imageId = this.getNodeParameter("imageId", 0, "") as string;
+        const imageUrl = (additionalFields.imageUrl as string) ?? "";
+        const imageId = (additionalFields.imageId as string) ?? "";
 
         if (imageUrl) body.image_url = imageUrl;
         if (imageId) body.image_id = imageId;
 
         // Add advanced parameters (for Kling models)
-        const motionIntensity = this.getNodeParameter("motionIntensity", 0, "") as string;
-        const cameraMotion = this.getNodeParameter("cameraMotion", 0, "") as string;
-        const videoStyle = this.getNodeParameter("videoStyle", 0, "") as string;
+        const motionIntensity = (additionalFields.motionIntensity as string) ?? "";
+        const cameraMotion = (additionalFields.cameraMotion as string) ?? "";
+        const videoStyle = (additionalFields.videoStyle as string) ?? "";
 
         if (motionIntensity) body.motion_intensity = motionIntensity;
         if (cameraMotion) body.camera_motion = cameraMotion;
@@ -3678,7 +3373,6 @@ export class ParallelAi implements INodeType {
         const options = {
           headers: {
             "Content-Type": "application/json",
-            "X-API-KEY": apiKey,
           },
           method: "POST" as "POST",
           url: `${baseUrl}/api/v0/videos/generate`,
@@ -3703,9 +3397,6 @@ export class ParallelAi implements INodeType {
         const videoId = this.getNodeParameter("videoId", 0) as string;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/videos/${videoId}/status`,
           json: true,
@@ -3719,7 +3410,8 @@ export class ParallelAi implements INodeType {
       if (operation === "create" || operation === "run") {
         const task = this.getNodeParameter("task", 0) as string;
         const sessionType = this.getNodeParameter("sessionType", 0) as string;
-        const useVision = this.getNodeParameter("useVision", 0) as boolean;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const useVision = (additionalFields.useVision as boolean) ?? false;
 
         const requestBody: IDataObject = { task, sessionType, useVision };
         if (sessionType === "authenticated") {
@@ -3731,7 +3423,6 @@ export class ParallelAi implements INodeType {
 
         const submitOptions = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3750,8 +3441,8 @@ export class ParallelAi implements INodeType {
           responseData = submitResponse;
         } else {
           const taskId = submitResponse.taskId;
-          const timeout = this.getNodeParameter("browserTimeout", 0, 600) as number;
-          const pollInterval = this.getNodeParameter("browserPollInterval", 0, 5) as number;
+          const timeout = (additionalFields.browserTimeout as number) ?? 600;
+          const pollInterval = (additionalFields.browserPollInterval as number) ?? 5;
           const maxAttempts = Math.max(1, Math.ceil(timeout / Math.max(1, pollInterval)));
           let completed = false;
 
@@ -3759,9 +3450,6 @@ export class ParallelAi implements INodeType {
             await sleep(pollInterval * 1000);
 
             const statusOptions = {
-              headers: {
-                "X-API-KEY": apiKey,
-              },
               method: "GET" as "GET",
               url: `${baseUrl}/api/v0/browser-task/${taskId}`,
               json: true,
@@ -3821,9 +3509,6 @@ export class ParallelAi implements INodeType {
         const taskId = this.getNodeParameter("browserTaskId", 0) as string;
 
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/browser-task/${taskId}`,
           json: true,
@@ -3837,8 +3522,9 @@ export class ParallelAi implements INodeType {
       if (operation === "search") {
         const query = this.getNodeParameter("query", 0) as string;
         const documentScopeType = this.getNodeParameter("documentScopeType", 0) as string;
-        const minScore = this.getNodeParameter("minScore", 0) as number;
-        const topK = this.getNodeParameter("topK", 0) as number;
+        const additionalFields = this.getNodeParameter("additionalFields", 0, {}) as IDataObject;
+        const minScore = (additionalFields.minScore as number) ?? 0.5;
+        const topK = (additionalFields.topK as number) ?? 10;
 
         if (!query || query.trim() === "") {
           throw new NodeOperationError(this.getNode(), "No query provided. Please provide a query.");
@@ -3859,7 +3545,6 @@ export class ParallelAi implements INodeType {
 
         const options = {
           headers: {
-            "X-API-KEY": apiKey,
             "Content-Type": "application/json",
           },
           method: "POST" as "POST",
@@ -3896,9 +3581,6 @@ export class ParallelAi implements INodeType {
       // Get available models
       if (operation === "getModels") {
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/models`,
           json: true,
@@ -3909,9 +3591,6 @@ export class ParallelAi implements INodeType {
       // Get user settings
       else if (operation === "getSettings") {
         const options = {
-          headers: {
-            "X-API-KEY": apiKey,
-          },
           method: "GET" as "GET",
           url: `${baseUrl}/api/v0/settings`,
           json: true,
@@ -3927,40 +3606,10 @@ export class ParallelAi implements INodeType {
       });
     }
 
-    // Prepare standard output
+    // Prepare output
     const standardOutput = Array.isArray(responseData) ? responseData : [responseData];
 
-    // Prepare AI tool output for employee chat operations
-    let aiToolOutput = standardOutput;
-    
-    if (resource === "employee" && operation === "chat" && responseData?.response) {
-      // Format for AI Tool output - provide the actual response content
-      aiToolOutput = [{
-        output: responseData.response,
-        metadata: {
-          employeeId: this.getNodeParameter("employeeId", 0),
-          operation: "chat",
-          model: this.getNodeParameter("model", 0),
-        }
-      }];
-    } else if (resource === "knowledgeBase" && operation === "search") {
-      // Format knowledge base results the way n8n AI retrievers expect
-      aiToolOutput = [{ documents: responseData.documents }];
-    } else if (resource === "document" && operation === "search" && responseData?.results) {
-      // Format document search results for AI Tool output (similar to KnowledgeBaseRetriever)
-      aiToolOutput = [{
-        output: responseData.results,
-        metadata: {
-          operation: "document_search",
-          query: this.getNodeParameter("query", 0),
-        }
-      }];
-    }
-
-    return [
-      this.helpers.returnJsonArray(standardOutput),
-      this.helpers.returnJsonArray(aiToolOutput),
-    ];
+    return [this.helpers.returnJsonArray(standardOutput)];
   }
 }
 
