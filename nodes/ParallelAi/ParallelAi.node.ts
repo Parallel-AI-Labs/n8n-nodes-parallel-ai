@@ -18,12 +18,7 @@ import {
   sleep,
 } from "n8n-workflow";
 
-import {
-  OperationParam,
-  findOperation,
-  getCatalog,
-  getCatalogBaseUrl,
-} from "./SpecCatalog";
+import { OperationParam, findOperation, getCatalog } from "./ApiCatalog";
 
 // Response interface for browser task submit API
 interface IBrowserTaskSubmitResponse extends IDataObject {
@@ -131,7 +126,7 @@ export class ParallelAi implements INodeType {
           {
             name: "API (Any Operation)",
             value: "api",
-            description: "Call any Parallel AI API operation, loaded live from the OpenAPI spec",
+            description: "Call any operation in the bundled Parallel AI API catalog",
           },
           {
             name: "Browser Task",
@@ -190,7 +185,7 @@ export class ParallelAi implements INodeType {
         default: "",
         required: true,
         description:
-          'API category to work with, loaded live from the API spec. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+          'API category to work with. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
         displayOptions: {
           show: {
             resource: ["api"],
@@ -2238,9 +2233,7 @@ export class ParallelAi implements INodeType {
   methods = {
     loadOptions: {
       async getApiResources(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-        const baseUrl = await getCatalogBaseUrl(this);
-        const resources = await getCatalog(this, baseUrl);
-        return resources.map((resource) => ({
+        return getCatalog().map((resource) => ({
           name: resource.name,
           value: resource.value,
           description: `${resource.operations.length} operations`,
@@ -2250,9 +2243,7 @@ export class ParallelAi implements INodeType {
       async getApiOperations(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const resourceValue = this.getCurrentNodeParameter("apiResource") as string;
         if (!resourceValue) return [];
-        const baseUrl = await getCatalogBaseUrl(this);
-        const resources = await getCatalog(this, baseUrl);
-        const resource = resources.find((r) => r.value === resourceValue);
+        const resource = getCatalog().find((r) => r.value === resourceValue);
         if (!resource) return [];
         return resource.operations.map((op) => ({
           name: op.displayName,
@@ -2464,9 +2455,7 @@ export class ParallelAi implements INodeType {
         const operationValue = this.getCurrentNodeParameter("operation") as string;
         if (!resourceValue || !operationValue) return { fields: [] };
 
-        const baseUrl = await getCatalogBaseUrl(this);
-        const resources = await getCatalog(this, baseUrl);
-        const operation = findOperation(resources, resourceValue, operationValue);
+        const operation = findOperation(getCatalog(), resourceValue, operationValue);
         if (!operation) return { fields: [] };
 
         const fields: ResourceMapperField[] = operation.params.map((param) => ({
@@ -3614,15 +3603,19 @@ export class ParallelAi implements INodeType {
 }
 
 /**
- * Executes the spec-driven "API" resource: resolves the chosen operation in
- * the live OpenAPI catalog and issues one request per input item.
+ * Executes the "API (Any Operation)" resource: resolves the chosen operation
+ * in the bundled API catalog and issues one request per input item.
  */
 async function executeApiOperation(this: IExecuteFunctions): Promise<INodeExecutionData[]> {
   const items = this.getInputData();
   const returnData: INodeExecutionData[] = [];
 
-  const baseUrl = await getCatalogBaseUrl(this);
-  const resources = await getCatalog(this, baseUrl);
+  const credentials = await this.getCredentials("parallelAiApi");
+  const baseUrl = ((credentials.baseUrl as string) || "https://api.parallellabs.app").replace(
+    /\/$/,
+    ""
+  );
+  const resources = getCatalog();
 
   for (let i = 0; i < items.length; i++) {
     try {
@@ -3633,7 +3626,7 @@ async function executeApiOperation(this: IExecuteFunctions): Promise<INodeExecut
       if (!operation) {
         throw new NodeOperationError(
           this.getNode(),
-          `Operation "${operationValue}" was not found for API resource "${apiResource}" in the current API spec`,
+          `Operation "${operationValue}" was not found for API resource "${apiResource}" in the bundled API catalog`,
           { itemIndex: i }
         );
       }

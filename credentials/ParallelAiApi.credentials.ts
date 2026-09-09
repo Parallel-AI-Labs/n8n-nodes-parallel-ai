@@ -40,8 +40,8 @@ export class ParallelAiApi implements ICredentialType {
 
   test: ICredentialTestRequest = {
     request: {
-      baseURL: "={{$credentials.apiUrl}}",
-      url: "/models",
+      baseURL: "={{$credentials.baseUrl}}",
+      url: "/api/v0/settings",
     },
   };
 }

@@ -15,7 +15,7 @@ for that operation.
 
 | Resource | Operations |
 |---|---|
-| **API (Any Operation)** | Any operation in the Parallel AI OpenAPI spec. Resources, operations and parameter fields are loaded live from the spec, so new endpoints appear without updating the package. |
+| **API (Any Operation)** | Any operation in the Parallel AI API. Resources, operations and parameter fields come from an API catalog bundled with the package (a snapshot of the OpenAPI spec), so nothing is fetched at design time. New endpoints appear when a new package version is released. |
 | **Browser Task** | Run (submit and wait for the result), Create (submit and return the task ID), Get (fetch status/result by ID) |
 | **Document** | Create, Delete, Get, Get Many, Move, Search, Update |
 | **Employee** | Chat, Get Many |
@@ -151,14 +151,14 @@ and [docs/document-search.md](docs/document-search.md) for more detail.
 
 ### Example 4: Call any API endpoint
 
-Use the spec-driven **API (Any Operation)** resource for endpoints that do not
-have a dedicated operation.
+Use the **API (Any Operation)** resource for endpoints that do not have a
+dedicated operation.
 
 1. Add the **Parallel AI** node.
 2. Set **Resource** to `API (Any Operation)`.
 3. Choose an **API Resource** (an API category, e.g. `Employees`) and an
-   **Operation** (e.g. `Get Employee`). Both lists are loaded live from the
-   Parallel AI OpenAPI spec.
+   **Operation** (e.g. `Get Employee`). Both lists come from the API
+   catalog bundled with the package.
 4. The **Parameters** section fills in with the path, query and body
    parameters that operation accepts; set the ones you need (required
    parameters are marked).
@@ -173,6 +173,18 @@ npm run build      # clean, compile TypeScript, copy icons
 npm run dev        # tsc --watch
 npm run lint       # eslint (includes eslint-plugin-n8n-nodes-base)
 npm run format     # prettier
+npm run sync-api-catalog  # refresh nodes/ParallelAi/api-catalog.json from the live OpenAPI spec
+```
+
+### Updating the API catalog
+
+The **API (Any Operation)** resource reads `nodes/ParallelAi/api-catalog.json`,
+a pre-parsed snapshot of the Parallel AI OpenAPI spec. To pick up new or
+changed endpoints, regenerate it, review the diff, bump the version and
+publish a new release:
+
+```bash
+npm run sync-api-catalog
 ```
 
 Then link the module into your local n8n installation:

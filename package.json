@@ -1,6 +1,6 @@
 {
   "name": "@parallel-ai/n8n-nodes-parallel-ai",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "n8n nodes for Parallel AI",
   "author": {
     "name": "Parallel AI",
@@ -44,6 +44,7 @@
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
+    "sync-api-catalog": "node scripts/sync-api-catalog.js",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
